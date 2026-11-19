@@ -12,12 +12,12 @@ const ROM_BASE = "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf0
 const ROMS = ["mos", "dfs", "viewsht", "edit", "basic4", "adfs", "view", "terminal"];
 // the 6502 Second Processor's client ROM (2 KB, at &F800 while it boots), from Matt Godbolt's jsbeeb, pinned
 const TUBE_ROM = "https://raw.githubusercontent.com/mattgodbolt/jsbeeb/4a83d430a15035570d17c36ccd1403c4499aabcb/public/roms/tube/6502Tube.rom";
-// the Acorn Electron's MOS 1.00 and BASIC II, from hoglet67's ElectronFpga at a pinned commit; its ACP 1770 DFS 2.10 (the
-// Plus 3's DFS, which Solid Elite for the Electron loads with) is in no public repository: ?elkdfs=<url>, or ELK_DFS here, or
-// the visitor's own copy, chosen once and kept in this browser (web/electron/README.md)
+// the Acorn Electron's MOS 1.00 and BASIC II, from hoglet67's ElectronFpga at a pinned commit; its ACP 1770 DFS (the
+// Plus 3's DFS, which Solid Elite for the Electron loads with) from the game's own repository (ELK_DFS; ?elkdfs=<url> gives
+// another), or failing that the visitor's own copy, chosen once and kept in this browser (web/electron/README.md)
 const ELK_ROM_BASE = "https://raw.githubusercontent.com/hoglet67/ElectronFpga/db0971434123bd77c71af6ca0575c36b63510b39/roms/";
 const ELK_ROMS = ["os100.rom", "Basic2.rom"];
-const ELK_DFS = null, ELK_DFS_KEY = "elite-agent-electron-dfs";
+const ELK_DFS = "https://raw.githubusercontent.com/ebenupton/solid-elite-acorn-electron/main/roms/DFS-1770-2.20.rom", ELK_DFS_KEY = "elite-agent-electron-dfs";
 const GAMES = {
     // (this fork's game: Solid Elite on a BBC Master with a 6502 Second Processor, the whole game on the parasite)
     tube: { name: "Tube", tube: true,

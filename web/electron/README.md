@@ -75,11 +75,11 @@ small differences add up, and the careers part.
 ## ROMs
 
 The Electron's ROMs are Acorn's and ACP's, and not in this repository. The page fetches MOS 1.00 and BASIC II from
-hoglet67's [ElectronFpga](https://github.com/hoglet67/ElectronFpga) at a pinned commit (the same images as clkh's). The
-ACP 1770 DFS 2.10 is in no public repository the page can fetch from: `?elkdfs=<url>` gives one, `ELK_DFS` in
-`src/main.js` can name a host, and otherwise the page asks the visitor for their copy (16 KB, `acp_dfs1770_210.rom` in
-MAME's `electron_plus3` set) once and keeps it in the browser. For the native and headless runs,
-`scripts/fetch-electron-roms.sh` fetches the first two and takes the DFS from `ELK_DFS=` or `ELK_PLUS3_ZIP=`.
+hoglet67's [ElectronFpga](https://github.com/hoglet67/ElectronFpga) at a pinned commit (the same images as clkh's), and
+the ACP 1770 DFS from the game's repository (`roms/DFS-1770-2.20.rom`; `ELK_DFS` in `src/main.js`). `?elkdfs=<url>` gives
+another, and if the fetch fails the page asks the visitor for their copy (16 KB) once and keeps it in the browser. For
+the native and headless runs, `scripts/fetch-electron-roms.sh` fetches the first two and takes the DFS from `ELK_DFS=`
+or `ELK_PLUS3_ZIP=`.
 
 ## The game's disc
 
