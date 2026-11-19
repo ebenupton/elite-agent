@@ -54,6 +54,20 @@ static uint8_t *s_px;
 static uint32_t *s_rgba;
 static int16_t s_audio[640];
 
+// ---- an Acorn Electron instead (electron/core_elk.c), for Solid Elite for the Electron: core_elk_boot in place of
+// core_boot, then the same calls
+int elk_core_boot(const uint8_t **roms, const uint8_t *image, uint32_t size);
+int elk_core_start(int skew, int mode);
+void elk_core_frame(int draw, uint8_t *px);
+void elk_core_key(int code, int down);
+int16_t *elk_core_audio(void);
+static int s_elk;
+// roms: 3 pointers of 16 KB each, the Electron's MOS 1.00, BASIC II and the ACP 1770 DFS, in the page's memory (kept)
+EXPORT("core_elk_boot") int core_elk_boot(const uint8_t **roms, const uint8_t *image, uint32_t size) {
+    s_elk = 1;
+    return elk_core_boot(roms, image, size);
+}
+
 EXPORT("core_alloc") void *core_alloc(uint32_t n) { return calloc(1, n); }
 
 // roms: 8 pointers of 16 KB each, the MOS then ROM slots 9 to 15, in the page's own memory (kept)
@@ -78,6 +92,7 @@ EXPORT("core_boot") int core_boot(const uint8_t **roms, const uint8_t *image, ui
 // the boot as run_sim's: to the title screen, a game that loads for longer waited for, skew frames more; then the player.
 // Returns 0 if it isn't an Elite the player knows
 EXPORT("core_start") int core_start(int skew, int mode) {
+    if (s_elk) return elk_core_start(skew, mode);
     beeb_frames(B, 700);
     for (int i = 0; i < 40; i++) { agent_ram(wasm_ram()); if (elite_detect(beeb_model(), wasm_ram())) break; beeb_frames(B, 50); }
     // (the Tube: the frame layer's code in, the parasite's code all loaded)
@@ -91,6 +106,11 @@ EXPORT("core_start") int core_start(int skew, int mode) {
 
 // one frame. draw: this frame through the renderer, into the indexed picture (core_rgba() gives it in colour)
 EXPORT("core_frame") void core_frame(int draw) {
+    if (s_elk) {
+        if (draw && !s_px) s_px = calloc(1, (size_t) RENDER_WIDTH * RENDER_HEIGHT);
+        elk_core_frame(draw, s_px);
+        return;
+    }
     agent_ram(wasm_ram());
     wasm_frame();
     if (draw) {
@@ -99,12 +119,13 @@ EXPORT("core_frame") void core_frame(int draw) {
     } else beeb_frames(B, 1);
 }
 
-EXPORT("core_key") void core_key(int code, int down) { beeb_key(B, code, down); }
+EXPORT("core_key") void core_key(int code, int down) { if (s_elk) elk_core_key(code, down); else beeb_key(B, code, down); }
 // (the Tube version reads the stick from JOPOS in the parasite's memory, but its host never sends it across: the host's
 // IRQ1 keeps the ADC's readings in its own memory. As Solid Elite's own agent harness does (tube/tools/tmachine.mjs),
 // the stick's high bytes go straight into the parasite's JOPOS, as a host that forwarded them would put them)
 enum { T_JOPOS = 0x0CA7 };
 EXPORT("core_analogue") void core_analogue(int channel, int value) {
+    if (s_elk) return;          // (no analogue port on an Electron without a Plus 1; the port flies on keys)
     beeb_analogue(B, channel, value);
     if (tube_on && channel >= 0 && channel < 3) tube_mem()[T_JOPOS + channel] = (uint8_t) (value >> 8);
 }
@@ -120,6 +141,7 @@ EXPORT("core_rgba") uint32_t *core_rgba(void) {
 
 // a frame of the sound chip, as it stands now, at 31,250 Hz: 625 samples
 EXPORT("core_audio") int16_t *core_audio(void) {
+    if (s_elk) return elk_core_audio();
     for (int i = 0; i < 625; i++) s_audio[i] = (int16_t) (sn_render8(&s_sn) / 8);
     return s_audio;
 }

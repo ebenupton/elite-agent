@@ -92,6 +92,16 @@ int main(int argc, char **argv)
         } else if (!strcmp(c, "regs")) {
             printf("pc %04x a %02x x %02x y %02x s %02x p %02x cycles %llu fields %u fpos %u romsel %d\n", E.cpu.pc, E.cpu.a,
                    E.cpu.x, E.cpu.y, E.cpu.s, elk_cpu6502_get_p(&E.cpu, 1), (unsigned long long) E.now, E.fields, E.fpos, E.active);
+        } else if (!strcmp(c, "keylog")) {
+            // (native_run's KEYLOG: each key change at its cycle, those after now, up to the cycle given)
+            FILE *f = fopen(argv[++i], "r"); uint64_t upto = strtoull(argv[++i], 0, 0);
+            unsigned long long t; int code, down;
+            while (f && fscanf(f, "%llu %d %d", &t, &code, &down) == 3 && t <= upto) {
+                if (t < E.now) continue;
+                elk_run(&E, t); elk_key(&E, code, down);
+            }
+            if (f) fclose(f);
+            elk_run(&E, upto);
         } else if (!strcmp(c, "save")) { if (!elk_save(&E, argv[++i])) { perror(argv[i]); return 1; } }
         else if (!strcmp(c, "load")) { if (!elk_load(&E, argv[++i])) { fprintf(stderr, "elkh: cannot load %s\n", argv[i]); return 1; } }
         else if (!strcmp(c, "undoc")) printf("undocumented opcodes run: %u\n", E.undoc);

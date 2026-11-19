@@ -6,6 +6,7 @@
 #include "player.h"
 #include "keyq.h"
 #include "state.h"
+#include "elite_ver.h"
 
 #define IMPORT(name) __attribute__((import_module("env"), import_name(name)))
 IMPORT("key") void js_key(int code, int down);
@@ -75,6 +76,9 @@ __attribute__((export_name("wasm_tally"))) double wasm_tally(void) { return tall
 __attribute__((export_name("wasm_cash"))) int32_t wasm_cash(void) { return cash(); }
 
 __attribute__((export_name("wasm_frame_no"))) uint32_t wasm_frame_no(void) { return io.frame; }
+
+// the commander block's address (TP) in the version being played: the page keeps the block as its save
+__attribute__((export_name("wasm_tp"))) uint32_t wasm_tp(void) { return A_TP; }
 
 // a commander to load from the disc when next docked (the page's chapters: a save put on the disc as E.<name>)
 __attribute__((export_name("wasm_load"))) char *wasm_load(void) { extern char g_load_name[8]; return g_load_name; }

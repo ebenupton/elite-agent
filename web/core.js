@@ -3,7 +3,8 @@ import { wasiShim } from "./wasi_shim.js";
 
 export class Core {
     /** bytes: core.wasm; roms: 8 of 16 KB (the MOS, then slots 9 to 15); disc: an .ssd; hooks: { log(level, line), note(json),
-     *  tubeRom: the 6502 Second Processor's 2 KB client ROM, to attach one (Solid Elite's Tube version) } */
+     *  tubeRom: the 6502 Second Processor's 2 KB client ROM, to attach one (Solid Elite's Tube version),
+     *  electron: an Acorn Electron instead of the Master, roms then its 3 of 16 KB: MOS 1.00, BASIC II, the ACP 1770 DFS } */
     static async create(bytes, roms, disc, hooks = {}) {
         const c = new Core();
         const dec = new TextDecoder();
@@ -23,7 +24,7 @@ export class Core {
         const ptrs = roms.map(put), table = c.x.core_alloc(4 * ptrs.length);
         new Uint32Array(mem.buffer, table, ptrs.length).set(ptrs);
         const d = put(disc);
-        c.x.core_boot(table, d, disc.length);
+        if (hooks.electron) c.x.core_elk_boot(table, d, disc.length); else c.x.core_boot(table, d, disc.length);
         if (hooks.tubeRom) c.x.core_tube(put(hooks.tubeRom));
         c.width = c.x.core_width(); c.height = c.x.core_height();
         return c;
@@ -37,8 +38,11 @@ export class Core {
     set name(n) { const b = new Uint8Array(this.x.memory.buffer, this.x.wasm_name(), 8); b.fill(0); b.set(new TextEncoder().encode(n.toUpperCase().slice(0, 7))); }
     /** a commander to load from the disc when next docked (its file E.<name>) */
     set load(n) { const b = new Uint8Array(this.x.memory.buffer, this.x.wasm_load(), 8); b.fill(0); b.set(new TextEncoder().encode(n.toUpperCase().slice(0, 7))); }
-    /** n bytes of the machine's main RAM (with a Second Processor, the parasite's), as the player saw it this frame */
+    /** n bytes of the machine's main RAM (with a Second Processor, the parasite's; on the Electron, the player's view of it:
+     *  main RAM with its windows of sideways RAM), as the player saw it this frame */
     ram(addr, n) { return new Uint8Array(this.x.memory.buffer, this.x.wasm_ram() + addr, n).slice(); }
+    /** the commander block's address in the player's RAM (TP), as the player's table for this game has it */
+    get tp() { return this.x.wasm_tp(); }
     get tally() { return this.x.wasm_tally(); }
     get cash() { return this.x.wasm_cash() / 10; }
     get action() { return this.x.wasm_action(); }

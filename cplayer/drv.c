@@ -145,8 +145,12 @@ void drv_fair_pump(void) {
     fair_note_out(joystick_on() ? g_own_jx : -1, joystick_on() ? g_own_jy : -1, s_held.n != 0xff && ks_has(&s_held, K_FIRE));
 }
 // (fair mode: a finger taps a key for at least 4 frames down and 3 up: ~7 keys a second, a fast typist)
+// (the Electron: its MOS scans the keyboard once a field, on the clock's interrupt, not 100 times a second, so a 3-frame
+// tap typed into a line (the chart's search, a commander's name) was lost at some phases of the field: the chart's search
+// sat at an empty "Planet Name?" for good. 4 frames were taken at that phase: 5 down)
 static void tap(uint8_t key, int down, int up) {
     if (g_fair & FAIR_KEYS) { if (down < 4) down = 4; if (up < 3) up = 3; }
+    if (ev_elk() && down < 5) down = 5;
     IO->tap(IO->ctx, key, down, up);
 }
 
