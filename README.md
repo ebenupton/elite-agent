@@ -143,6 +143,12 @@ with `DISC=` its disc (`5-compiled-game-discs/elite-master-sng47.ssd` in its rep
 (seed 13, on an earlier build) reached Elite in 26.6 game hours, against 23.5 on SNG47, mostly lost to reloads where the player
 misses Solid Elite's docked screens.
 
+Solid Elite for the Acorn Electron (an Electron with a Plus 3 and 64K of sideways RAM; BBC Micro disc Elite ported) runs on
+an Acorn Electron built into the page's core (`?game=electron`, [web/electron/README.md](web/electron/README.md)). It is the
+disc version to the player, keys only, with its addresses generated from the port's build (`web/electron/gen-ev.mjs`):
+the port keeps moving its state into sideways RAM, and the machine copies whatever the table puts in a bank into the view
+the player reads.
+
 ## The player (`cplayer/`)
 
 | File | What it does |

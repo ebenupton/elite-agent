@@ -12,11 +12,21 @@ const ROM_BASE = "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf0
 const ROMS = ["mos", "dfs", "viewsht", "edit", "basic4", "adfs", "view", "terminal"];
 // the 6502 Second Processor's client ROM (2 KB, at &F800 while it boots), from Matt Godbolt's jsbeeb, pinned
 const TUBE_ROM = "https://raw.githubusercontent.com/mattgodbolt/jsbeeb/4a83d430a15035570d17c36ccd1403c4499aabcb/public/roms/tube/6502Tube.rom";
+// the Acorn Electron's MOS 1.00 and BASIC II, from hoglet67's ElectronFpga at a pinned commit; its ACP 1770 DFS 2.10 (the
+// Plus 3's DFS, which Solid Elite for the Electron loads with) is in no public repository: ?elkdfs=<url>, or ELK_DFS here, or
+// the visitor's own copy, chosen once and kept in this browser (web/electron/README.md)
+const ELK_ROM_BASE = "https://raw.githubusercontent.com/hoglet67/ElectronFpga/db0971434123bd77c71af6ca0575c36b63510b39/roms/";
+const ELK_ROMS = ["os100.rom", "Basic2.rom"];
+const ELK_DFS = null, ELK_DFS_KEY = "elite-agent-electron-dfs";
 const GAMES = {
     // (this fork's game: Solid Elite on a BBC Master with a 6502 Second Processor, the whole game on the parasite)
     tube: { name: "Tube", tube: true,
         credit: "Solid Elite for the 6502 Second Processor by Eben Upton, after Mark Moxon's source and Ian Bell and David Braben", skew: 13,
         disc: "https://raw.githubusercontent.com/ebenupton/solid-elite-6502-second-processor/d52896e35acad6165a13cc913fea685b189b95a7/solid-elite-tube.ssd" },
+    // (Solid Elite for the Acorn Electron: an Electron with a Plus 3 and 64K of sideways RAM, web/electron/; keys only)
+    electron: { name: "Electron", electron: true,
+        credit: "Solid Elite for the Acorn Electron by Eben Upton, after Mark Moxon's source and Ian Bell and David Braben", skew: 13,
+        disc: "https://raw.githubusercontent.com/ebenupton/solid-elite-acorn-electron/main/solid-elite-acorn-electron.ssd" },
     // (both flown to Elite on this core.wasm, whole careers matching in a browser and in Node: web/STARTS.md)
     flicker: { name: "Wireframe",     // 16.45 game hours
         credit: "Flicker-free Elite by Mark Moxon, after Ian Bell and David Braben", skew: 13,
@@ -35,7 +45,10 @@ const PMODES = { optimal: { n: 0, name: "Optimal" }, fair: { n: 1, name: "Fair" 
 const MODE = PMODES[Q.get("mode")] ? Q.get("mode") : DEFAULT_MODE;
 // the last save, kept in this browser: the commander block (the same for both games, at its own address in each) and the career's
 // counters. A reload or a change of game carries on from it. ?fresh, ?skew or ?check: a fresh career, the save left alone
-const COMMANDER = "BITKICK", SAVE_KEY = "elite-agent-tube-save1", A_TP = { flicker: 0x1234, solid: 0x0C34, tube: 0x0C34 };
+// (the Electron's game is disc Elite's, whose commander file is its own: kept apart; its TP from the core, generated with the
+// build's addresses)
+const COMMANDER = "BITKICK", SAVE_KEY = GAMES[GAME].electron ? "elite-agent-electron-save1" : "elite-agent-tube-save1";
+const A_TP = { flicker: 0x1234, solid: 0x0C34, tube: 0x0C34 };
 const KEEP = !(Q.has("fresh") || Q.has("skew") || Q.has("check"));
 let saved = null;
 try { saved = KEEP ? JSON.parse(localStorage.getItem(SAVE_KEY) || "null") : null; } catch {}
@@ -138,6 +151,25 @@ function soundFrame(core) {
     sound.next += 0.02;
 }
 
+// the Electron's DFS: from ?elkdfs or ELK_DFS if given, else the copy this browser keeps, else one the visitor chooses (16 KB:
+// the ACP 1770 DFS 2.10, acp_dfs1770_210.rom in MAME's electron_plus3 set), kept for next time
+async function elkDfs() {
+    const url = Q.get("elkdfs") || ELK_DFS;
+    if (url) return bytes(url, "the Electron's DFS ROM");
+    try { const k = localStorage.getItem(ELK_DFS_KEY); if (k) return Uint8Array.from(atob(k), (c) => c.charCodeAt(0)); } catch {}
+    const rom = await new Promise((resolve) => {
+        const card = document.querySelector("#loading .card"), box = document.createElement("div");
+        box.style.cssText = "margin-top:14px;text-align:center;font-size:14px;line-height:1.5";
+        box.innerHTML = `The Electron's disc system ROM, the ACP 1770 DFS (2.10), isn't published anywhere this page can fetch it from.<br>
+            Choose your copy (16 KB, <i>acp_dfs1770_210.rom</i> in MAME's <i>electron_plus3</i> set): it stays in this browser.<br>`;
+        const input = document.createElement("input"); input.type = "file"; input.style.marginTop = "8px";
+        input.onchange = async () => { const f = input.files[0]; if (!f) return; const b = new Uint8Array(await f.arrayBuffer()); if (b.length !== 16384) { alert("that isn't a 16 KB ROM"); return; } box.remove(); resolve(b); };
+        box.appendChild(input); card.appendChild(box);
+    });
+    try { localStorage.setItem(ELK_DFS_KEY, btoa(String.fromCharCode(...rom))); } catch {}
+    return rom;
+}
+
 async function bytes(url, what) {
     const r = await fetch(url);
     if (!r.ok) throw new Error(`${what}: ${r.status}`);
@@ -150,9 +182,11 @@ async function sha256(text) {
 
 async function main() {
     for (const id of ["chapter", "load", "save", "p-chapter", "p-load", "p-save"]) { const e = $(id); if (e) e.style.display = "none"; }
-    const by = `Emulated by <a href="https://github.com/kieranhj/esp32-beeb">Kieran Connell's Master core</a> (GPL-3.0) in WebAssembly${GAMES[GAME].tube ? `, with a 6502 Second Processor (after <a href="https://github.com/mattgodbolt/jsbeeb">jsbeeb</a>'s Tube)` : ""} · agent: <a href="https://github.com/8bitkick/elite-agent">8bitkick/elite-agent</a>`;
-    const elite = GAME === "tube" ? `Solid Elite for the 6502 Second Processor by <a href="https://github.com/ebenupton/solid-elite-6502-second-processor">Eben Upton</a>, after Mark Moxon's source` : GAME === "solid" ? `Solid Elite by <a href="https://github.com/ebenupton/solid-elite-bbc-master">Eben Upton</a>, after Mark Moxon's source` : `flicker-free disc from <a href="https://github.com/markmoxon/elite-source-code-bbc-master">Mark Moxon</a>`;
-    for (const id of ["credit", "p-credit"]) { const c = $(id); if (c) c.innerHTML = `<b>Acornsoft Elite</b>, BBC Master${GAMES[GAME].tube ? " with a 6502 Second Processor" : ""} · Elite © Ian Bell and David Braben · ${elite}<br>${by}`; }
+    const ELK = !!GAMES[GAME].electron;
+    const by = ELK ? `An Acorn Electron with a Plus 3 in WebAssembly: Kieran Connell's 6502 and 1770 cores (GPL-3.0), the ULA after <a href="https://github.com/TomHarte/CLK">Clock Signal</a>'s · agent: <a href="https://github.com/8bitkick/elite-agent">8bitkick/elite-agent</a>`
+        : `Emulated by <a href="https://github.com/kieranhj/esp32-beeb">Kieran Connell's Master core</a> (GPL-3.0) in WebAssembly${GAMES[GAME].tube ? `, with a 6502 Second Processor (after <a href="https://github.com/mattgodbolt/jsbeeb">jsbeeb</a>'s Tube)` : ""} · agent: <a href="https://github.com/8bitkick/elite-agent">8bitkick/elite-agent</a>`;
+    const elite = ELK ? `Solid Elite for the Acorn Electron by <a href="https://github.com/ebenupton/solid-elite-acorn-electron">Eben Upton</a>, after Mark Moxon's source` : GAME === "tube" ? `Solid Elite for the 6502 Second Processor by <a href="https://github.com/ebenupton/solid-elite-6502-second-processor">Eben Upton</a>, after Mark Moxon's source` : GAME === "solid" ? `Solid Elite by <a href="https://github.com/ebenupton/solid-elite-bbc-master">Eben Upton</a>, after Mark Moxon's source` : `flicker-free disc from <a href="https://github.com/markmoxon/elite-source-code-bbc-master">Mark Moxon</a>`;
+    for (const id of ["credit", "p-credit"]) { const c = $(id); if (c) c.innerHTML = `<b>Acornsoft Elite</b>, ${ELK ? "Acorn Electron" : "BBC Master"}${GAMES[GAME].tube ? " with a 6502 Second Processor" : ""} · Elite © Ian Bell and David Braben · ${elite}<br>${by}`; }
     const NOTE = {
         optimal: "Optimal mode: the agent reads the game's RAM. Its fights are flown by the interceptor, a network written for points a minute; the docking by the docking network.",
         fair: "Fair mode: the agent sees only what a player can see on the screen. Fights and docking are flown by two AI models, dogfights 8 KB, docking 1.5 KB, written after MIT CSAIL's Sparks of Weight-Space Programming.",
@@ -194,7 +228,8 @@ async function main() {
         fetch(`panel.json?v=${V}`).then((r) => r.json()), fetch(`galaxies.json?v=${V}`).then((r) => r.json()),
         bytes(`core.wasm?v=${V}`, "the machine"), bytes(Q.get("disc") || GAMES[GAME].disc, "Elite's disc"),
         GAMES[GAME].tube ? bytes(Q.get("tuberom") || TUBE_ROM, "the Second Processor's ROM") : null,
-        ...ROMS.map((n) => bytes(`${Q.get("roms") || ROM_BASE}${n}.rom`, `ROM ${n}`)),
+        ...(ELK ? [...ELK_ROMS.map((n) => bytes(`${Q.get("elkroms") || ELK_ROM_BASE}${n}`, `ROM ${n}`)), elkDfs()]
+            : ROMS.map((n) => bytes(`${Q.get("roms") || ROM_BASE}${n}.rom`, `ROM ${n}`))),
     ]);
     const gh = new Image(); gh.src = "gh.png";
     const panel = new Panel($("panel"), panelData, galaxies, gh);
@@ -234,14 +269,14 @@ async function main() {
     $("panel").addEventListener("mouseleave", () => tip.classList.remove("show"));
 
     const keepSave = (f, e) => {
-        const block = core.ram(A_TP[GAME], 256);
+        const block = core.ram(ELK ? core.tp : A_TP[GAME], 256);
         saved = { frame: f + OFF, data: btoa(String.fromCharCode(...block)), game: GAME,
             career: { tally: e.tally, cash: e.cash, system: s.system, visits: s.visits, kills: s.kills, stars: s.stars, docks: s.docks, deaths: s.deaths } };
         try { localStorage.setItem(SAVE_KEY, JSON.stringify(saved)); } catch {}
     };
     const startDisc = RESUMED ? addFile(disc, COMMANDER, "E", Uint8Array.from(atob(saved.data), (c) => c.charCodeAt(0))) : disc;
     const core = await Core.create(wasm, roms, startDisc, {
-        tubeRom,
+        tubeRom, electron: ELK,
         log: (level, line) => {
             if (level !== 0) return;
             const f = core.frameNo;
@@ -265,7 +300,7 @@ async function main() {
             else if (e.event === "rank" && e.rank === "Elite" && !s.elite) { s.elite = f; flash(`ELITE after ${(f / 180000).toFixed(2)} game hours`, 0); }
         },
     });
-    loading(0.5, GAMES[GAME].tube ? "Booting the BBC Master and its Second Processor, loading Elite…" : "Booting the BBC Master and loading Elite…");
+    loading(0.5, ELK ? "Booting the Acorn Electron, loading Elite from its Plus 3…" : GAMES[GAME].tube ? "Booting the BBC Master and its Second Processor, loading Elite…" : "Booting the BBC Master and loading Elite…");
     await new Promise((r) => setTimeout(r, 30));
     core.name = COMMANDER;
     if (!core.start(SKEW, PMODES[MODE].n)) throw new Error("no Elite the player knows on this disc");
@@ -405,7 +440,7 @@ async function main() {
         const q = new URLSearchParams(); if (GAME !== DEFAULT_GAME) q.set("game", GAME); if (MODE !== DEFAULT_MODE) q.set("mode", MODE);
         const to = q.toString() ? "?" + q.toString() : ""; if (location.search === to) location.reload(); else location.search = to;
     };
-    for (const id of ["deadly", "p-deadly"]) { const b = $(id); if (b) b.onclick = deadly; }
+    for (const id of ["deadly", "p-deadly"]) { const b = $(id); if (b) { b.onclick = deadly; if (ELK) b.style.display = "none"; } }     // (a Master save)
     const toggleSound = () => {
         if (!sound.ctx) sound.ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 31250 });
         sound.ctx.resume();

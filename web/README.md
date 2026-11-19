@@ -11,6 +11,9 @@
   careers in [STARTS.md](STARTS.md) again.
 - **Elite and the ROMs** are fetched by the browser at pinned commits: Mark Moxon's flicker-free disc or Eben Upton's Solid
   Elite, and the MOS 3.20 ROMs from beebjit's repository. This site serves none of them.
+- **The Acorn Electron** (`?game=electron`): Solid Elite for the Electron on an emulated Electron with a Plus 3 and sideways
+  RAM, in the same `core.wasm` ([electron/README.md](electron/README.md)): its MOS and BASIC from hoglet67's ElectronFpga, its
+  disc from the game's repository; its DFS ROM, which no public repository holds, from `?elkdfs=` or the visitor's own copy.
 - **The panel** is the film's, drawn on a canvas in the film's own 1920x1080 frame ([src/panel.js](src/panel.js)): the clock,
   rank, tally, credits, system and the tally chart; the dogfight network (yellow) in a fight, the docking network (cyan) on the
   way in; the galaxy map when docked. A phone gets the rank bar and time above the screen, and tabs: AI, Galaxy, Log and Options.

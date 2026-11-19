@@ -31,7 +31,7 @@ The page's defaults are `?game=tube&mode=curious`; the Wireframe and Solid (Mast
 
 ```sh
 scripts/fetch-emulator.sh                    # the emulator's source and the Master's ROMs
-WASI_SDK=/path/to/wasi-sdk web/tube/build.sh # web/core.wasm (github.com/WebAssembly/wasi-sdk/releases; wasi-sdk 34 here)
+WASI_SDK=/path/to/wasi-sdk web/tube/build.sh # web/core.wasm, the Acorn Electron (../electron) in it too (github.com/WebAssembly/wasi-sdk/releases; wasi-sdk 34 here)
 shasum -a 256 web/core.wasm > web/core.wasm.sha256
 web/build_site.sh                            # web/_site: upload its contents as they are
 ```
