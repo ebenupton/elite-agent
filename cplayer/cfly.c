@@ -149,7 +149,7 @@ double cfly_steer(vec_t v, int jx, int jy, double tol, keyset_t *keys) {
         C.a = a, C.b = b, g_cf_b = b;
         C.tx = jx_for(a), C.ty = jy_for(b);
     }
-out:
+out:;
     extern int g_want_jx, g_want_jy;
     g_want_jx = C.tx, g_want_jy = C.ty;
     // (the keyboard's way there, as steer() does it)
