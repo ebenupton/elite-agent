@@ -17,7 +17,7 @@ const TUBE_ROM = "https://raw.githubusercontent.com/mattgodbolt/jsbeeb/4a83d430a
 // another), or failing that the visitor's own copy, chosen once and kept in this browser (web/electron/README.md)
 const ELK_ROM_BASE = "https://raw.githubusercontent.com/hoglet67/ElectronFpga/db0971434123bd77c71af6ca0575c36b63510b39/roms/";
 const ELK_ROMS = ["os100.rom", "Basic2.rom"];
-const ELK_DFS = "https://raw.githubusercontent.com/ebenupton/solid-elite-acorn-electron/0ec8af0b09bd4c1730429a261368e09f6652794e/roms/DFS-1770-2.20.rom", ELK_DFS_KEY = "elite-agent-electron-dfs";
+const ELK_DFS = "https://raw.githubusercontent.com/ebenupton/solid-elite-acorn-electron/f431fdcf93ab4cc1b87b4de85cdfab1dc9dfe999/roms/DFS-1770-2.20.rom", ELK_DFS_KEY = "elite-agent-electron-dfs";
 const GAMES = {
     // (this fork's game: Solid Elite on a BBC Master with a 6502 Second Processor, the whole game on the parasite)
     tube: { name: "Tube", tube: true,
@@ -26,7 +26,7 @@ const GAMES = {
     // (Solid Elite for the Acorn Electron: an Electron with a Plus 3 and 64K of sideways RAM, web/electron/; keys only)
     electron: { name: "Electron", electron: true,
         credit: "Solid Elite for the Acorn Electron by Eben Upton, after Mark Moxon's source and Ian Bell and David Braben", skew: 13,
-        disc: "https://raw.githubusercontent.com/ebenupton/solid-elite-acorn-electron/0ec8af0b09bd4c1730429a261368e09f6652794e/solid-elite-acorn-electron.ssd" },
+        disc: "https://raw.githubusercontent.com/ebenupton/solid-elite-acorn-electron/f431fdcf93ab4cc1b87b4de85cdfab1dc9dfe999/solid-elite-acorn-electron.ssd" },
     // (both flown to Elite on this core.wasm, whole careers matching in a browser and in Node: web/STARTS.md)
     flicker: { name: "Wireframe",     // 16.45 game hours
         credit: "Flicker-free Elite by Mark Moxon, after Ian Bell and David Braben", skew: 13,
