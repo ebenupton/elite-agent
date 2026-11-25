@@ -1,6 +1,7 @@
 // core.wasm headless: a career, to Elite or for MINUTES of game time.
 //   ROMS=dir DISC=file.ssd [TUBEROM=6502Tube.rom] [SKEW=13] [MODE=fair] [DRAW=0] [SHOT=frame:file.rgba] node web/run_core.mjs MINUTES [journal.jsonl]
 //   ELK=1 ROMS=dir DISC=solid-elite-acorn-electron.ssd ...: an Acorn Electron (ROMS: os.rom, basic.rom, DFS-1770-2.20.rom)
+//   MB=1 ROMS=dir DISC=solid-elite-bbc-micro.ssd ...: a BBC Model B (ROMS: os12.rom, basic2.rom, dfs226.rom)
 // DRAW=n draws every nth frame through the renderer (a test that drawing changes nothing). Prints the journal's hash.
 import { createHash } from "node:crypto";
 import { createWriteStream, readFileSync, writeFileSync } from "node:fs";
@@ -9,8 +10,8 @@ import { Core } from "./core.js";
 const here = new URL(".", import.meta.url).pathname;
 const minutes = +(process.argv[2] || 10), jpath = process.argv[3];
 const ROMS = process.env.ROMS, DRAW = +(process.env.DRAW || 0);
-const ELK = !!process.env.ELK;
-const names = ELK ? ["os", "basic", "DFS-1770-2.20"] : ["mos", "dfs", "viewsht", "edit", "basic4", "adfs", "view", "terminal"];
+const ELK = !!process.env.ELK, MB = !!process.env.MB;
+const names = ELK ? ["os", "basic", "DFS-1770-2.20"] : MB ? ["os12", "basic2", "dfs226"] : ["mos", "dfs", "viewsht", "edit", "basic4", "adfs", "view", "terminal"];
 const roms = names.map((n) => readFileSync(`${ROMS}/${n}.rom`));
 const hash = createHash("sha256"), journal = jpath ? createWriteStream(jpath) : null;
 let elite = 0, deaths = 0;
@@ -18,6 +19,7 @@ const stamp = () => (core.frameNo / 3000).toFixed(1).padStart(7);
 const core = await Core.create(readFileSync(process.env.WASM || here + "core.wasm"), roms, readFileSync(process.env.DISC), {
     tubeRom: process.env.TUBEROM ? readFileSync(process.env.TUBEROM) : null,     // (a 6502 Second Processor: Solid Elite's Tube disc)
     electron: ELK,                                                              // (an Acorn Electron: Solid Elite for the Electron)
+    modelb: MB,                                                                 // (a BBC Model B: Solid Elite for the BBC Micro)
     log: (lv, line) => { if (lv === 0) { console.log(stamp(), line); if (/died|escape pod/.test(line)) deaths++; } },
     note: (json) => {
         const l = `{"frame": ${core.frameNo}, "e": ${json}}\n`;

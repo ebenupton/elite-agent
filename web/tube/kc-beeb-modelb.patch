@@ -1,0 +1,293 @@
+diff -ru a/cpu6502.c b/cpu6502.c
+--- a/cpu6502.c
++++ b/cpu6502.c
+@@ -1017,7 +1017,11 @@
+ 
+         // Undocumented NMOS opcode: not implemented until a Model B profile
+         // needs them. Treated as a one-byte, two-cycle NOP.
+-        OPC(undoc) (void)rd(cpu, cpu->pc); NEXT;
++        OPC(undoc)
++#ifdef CPU6502_UNDOC
++            CPU6502_UNDOC(cpu);
++#endif
++            (void)rd(cpu, cpu->pc); NEXT;
+     }
+ 
+     CPU6502_SYNC(cpu);
+diff -ru a/fdc.c b/fdc.c
+--- a/fdc.c
++++ b/fdc.c
+@@ -554,6 +554,12 @@
+     }
+ }
+ 
++// (kc-beeb-modelb.patch: on the Model B, MACHINE_MODEL_B, the Acorn interface's latch is the chip's own bits)
++#ifdef MACHINE_MODEL_B
++#define FDC_MODEL_B 1
++#else
++#define FDC_MODEL_B 0
++#endif
+ // The Master's control register bits to the chip's.
+ static uint8_t master_remap(uint8_t val)
+ {
+@@ -592,10 +598,10 @@
+     // at the end of the stretched access, one cycle after our write cycle,
+     // so a timer started here fires one later. The control register (FE24)
+     // is a 2 MHz address and lines up.
+-    f->in_io = (addr & 7) >= 4;
++    f->in_io = !FDC_MODEL_B && (addr & 7) >= 4;   // (on the Model B the 1770 is at FE84, a 2 MHz address)
+     switch (addr & 7) {
+     case 0: case 1: case 2: case 3:
+-        write_control(f, master_remap(val));
++        write_control(f, FDC_MODEL_B ? val : master_remap(val));   // (the Model B's Acorn interface: the chip's own bits)
+         break;
+     case 4:
+         if (!is_reset(f->control)) {
+diff -ru a/machine.c b/machine.c
+--- a/machine.c
++++ b/machine.c
+@@ -41,6 +41,13 @@
+ #define CRTC_API MACHINE_CODE_ATTR
+ 
+ #include "machine.h"
++// (kc-beeb-modelb.patch: MACHINE_MODEL_B builds this file again as a BBC Model B: the NMOS 6502, MOS 1.20 and no shadow
++// RAM, ANDY, HAZEL or CMOS; SHEILA as the Model B decodes it, with an Acorn 1770 interface at &FE80; web/modelb/)
++#ifdef MACHINE_MODEL_B
++#define MODEL_B 1
++#else
++#define MODEL_B 0
++#endif
+ // (kc-beeb-tube.patch: a 6502 Second Processor on the Tube, web/tube/tube.c)
+ extern uint8_t tube_host_irq;
+ extern int tube_on;
+@@ -62,7 +69,15 @@
+ #define VS_PUT(c, w) do { struct machine *mm_ = crtc_owner(c); if (mm_->vs) vs_put(mm_->vs, (w)); } while (0)
+ #define CRTC_RENDER(c, data, dispen, odd, ma13) \
+     VS_PUT(c, (uint16_t)(((data) << 8) | ((odd) ? VS_ODD : 0) | ((dispen) ? VS_DISPEN : 0) | ((ma13) ? VS_MA13 : 0)))
+-#define CRTC_HSYNC(c, width) VS_PUT(c, VS_EV(VS_HSYNC, (width)))
++// (the Model B counts the horizontal syncs since the last vertical sync, with or without a stream, so that a picture
++// started mid-field can start the renderer's beam where the raster is: machine_hsyncs())
++#if MODEL_B
++static uint32_t s_hsyncs;
++#define MB_HSYNC() (s_hsyncs++)
++#else
++#define MB_HSYNC() ((void)0)
++#endif
++#define CRTC_HSYNC(c, width) do { MB_HSYNC(); VS_PUT(c, VS_EV(VS_HSYNC, (width))); } while (0)
+ #define CRTC_CURSOR(c) VS_PUT(c, VS_EV(VS_CURSOR, 0))
+ #define CRTC_RA(c, ra, isv) VS_PUT(c, VS_EV(VS_RA, (ra) | ((isv) ? 0x80 : 0)))
+ // The CRTC fast path keeps the ring head in a register for the run.
+@@ -96,6 +111,7 @@
+     } while (0)
+ // An hsync event from the fast paths, through the run's ring head.
+ #define CRTC_RUN_HSYNC(c, width) do { \
++        MB_HSYNC(); \
+         if (vs_) { \
+             vs_->ring[vh_ & (VS_RING - 1)] = VS_EV(VS_HSYNC, (width)); \
+             vh_++; \
+@@ -212,6 +228,12 @@
+ // E). The surprising case HAZEL=0, X=1, E=0 sends MOS code to main RAM.
+ static void remap_shadow(struct machine *m)
+ {
++    if (MODEL_B) {   // (no shadow RAM: the display and the CPU both see main RAM)
++        m->display_base = m->ram;
++        map_range(m, 0, 0x30, 0x50, m->ram + 0x3000, m->ram + 0x3000);
++        map_range(m, 1, 0x30, 0x50, m->ram + 0x3000, m->ram + 0x3000);
++        return;
++    }
+     int x = (m->acccon >> 2) & 1;
+     int e = (m->acccon >> 1) & 1;
+     int hazel = (m->acccon >> 3) & 1;
+@@ -227,6 +249,10 @@
+     map_range(m, 1, 0x30, 0x50, mos, mos);
+ }
+ 
++#if MODEL_B
++// (the Model B: sideways RAM in slots 0-3 too, as jsbeeb's Model B has, the platform's buffers or NULL)
++static uint8_t *s_swram_lo[4];
++#endif
+ static void remap_sideways(struct machine *m)
+ {
+     int bank = m->romsel & 0x0f;
+@@ -235,6 +261,11 @@
+     if (bank >= 4 && bank < 4 + MACHINE_SWRAM_SLOTS) {
+         swram = m->swram[bank - 4];  // NULL if the platform gave none
+     }
++#if MODEL_B
++    if (bank < 4) {
++        swram = s_swram_lo[bank];
++    }
++#endif
+     for (int set = 0; set < 2; set++) {
+         if (swram) {
+             map_range(m, set, 0x80, 0x40, swram, swram);
+@@ -243,7 +274,7 @@
+         } else {
+             map_range_const(m, set, 0x80, 0x40, m->empty_rom, 0);
+         }
+-        if (m->romsel & 0x80) {
++        if (!MODEL_B && (m->romsel & 0x80)) {
+             map_range(m, set, 0x80, 0x10, m->andy, m->andy);
+         }
+     }
+@@ -252,7 +283,7 @@
+ static void remap_hazel(struct machine *m)
+ {
+     for (int set = 0; set < 2; set++) {
+-        if (m->acccon & 0x08) {
++        if (!MODEL_B && (m->acccon & 0x08)) {
+             map_range(m, set, 0xc0, 0x20, m->hazel, m->hazel);
+         } else {
+             map_range_const(m, set, 0xc0, 0x20, m->mos, 256);
+@@ -380,7 +411,7 @@
+ 
+     // CMOS/RTC control: PB6 enable, PB7 address strobe, IC32 bit 1 read,
+     // bit 2 data (beebjit's cmos.c).
+-    m->cmos_enabled = (bus >> 6) & 1;
++    m->cmos_enabled = !MODEL_B && ((bus >> 6) & 1);   // (a Model B has no CMOS: PB6 and PB7 are inputs)
+     if (m->cmos_enabled) {
+         int strobe = (bus >> 7) & 1;
+         int data = (m->ic32 >> 2) & 1;
+@@ -427,6 +458,11 @@
+     MACHINE_VSYNC_LOG(m, level);
+ #endif
+     via_set_ca1(&m->sysvia, level);
++#if MODEL_B
++    if (level) {
++        s_hsyncs = 0;
++    }
++#endif
+     if (m->vs) {
+         vs_put(m->vs, VS_EV(VS_VSYNC, level));
+     }
+@@ -931,6 +967,10 @@
+ // except FE20-FE27, FE2C-FE3F and FEA1-FEFF.
+ INLINE int is_1mhz(uint16_t addr)
+ {
++    if (MODEL_B) {   // (the Model B's, beebjit's and jsbeeb's: FE00-FE1F, FE40-FE7F and FEC0-FEDF, and FRED and JIM)
++        static const uint8_t slow[8] = {1, 0, 1, 1, 0, 0, 1, 0};
++        return (addr & 0xff00) != 0xfe00 || slow[(addr >> 5) & 7];
++    }
+     if ((addr & 0xff00) != 0xfe00) {
+         return 1;
+     }
+@@ -947,9 +987,35 @@
+ }
+ 
+ 
++#if MODEL_B
++// SHEILA as the Model B decodes it: the CRTC FE00-FE07, the ACIA FE08-FE0F, the serial ULA FE10-FE17, the video ULA
++// FE20-FE2F, the ROM select latch FE30-FE3F (write only, four bits), the VIAs FE40-FE7F, the Acorn 1770 interface FE80
++// (its control latch at FE80-FE83, the 1770 at FE84-FE87, mirrored to FE9F), the ADC FEC0-FEDF, the Tube FEE0-FEFF.
++// Each device is mapped to the Master's address for it, so the rest of this file treats it as the Master's.
++static uint16_t model_b_addr(uint16_t addr)
++{
++    switch (addr & 0xffe0) {
++    case 0xfe00:
++        if (addr < 0xfe08) return 0xfe00 | (addr & 1);
++        if (addr < 0xfe10) return 0xfe08 | (addr & 1);
++        if (addr < 0xfe18) return 0xfe10;
++        return 0xfe1c;                                  // (nothing)
++    case 0xfe20: return (addr & 0x10) ? 0xfe30 : 0xfe20 | (addr & 1);
++    case 0xfe40: case 0xfe60: return addr;
++    case 0xfe80: return (addr & 4) ? 0xfe28 | (addr & 3) : 0xfe24;
++    case 0xfec0: return 0xfe18 | (addr & 3);
++    case 0xfee0: return addr;
++    default: return 0xfe1c;
++    }
++}
++#endif
+ static MACHINE_NOINLINE uint8_t sheila_read(struct machine *m, uint16_t addr)
+ {
+     uint8_t ret = 0xfe;
++#if MODEL_B
++    addr = model_b_addr(addr);
++    if (addr == 0xfe30 || addr == 0xfe24) return 0xfe;   // (write only)
++#endif
+     switch (addr & 0xfffc) {
+     case 0xfe00: case 0xfe04:
+         ret = crtc_read(&m->crtc, addr & 1);
+@@ -1007,6 +1073,10 @@
+ 
+ static MACHINE_NOINLINE void sheila_write(struct machine *m, uint16_t addr, uint8_t val)
+ {
++#if MODEL_B
++    addr = model_b_addr(addr);
++    if (addr == 0xfe30) val &= 0x0f;   // (a four-bit latch)
++#endif
+     switch (addr & 0xfffc) {
+     case 0xfee0: case 0xfee4: case 0xfee8: case 0xfeec:
+     case 0xfef0: case 0xfef4: case 0xfef8: case 0xfefc:
+@@ -1113,7 +1183,7 @@
+ // the window, which the scheduler's own bound on the CRTC answers.
+ INLINE int io_needs_crtc(const struct machine *m, uint16_t addr, uint32_t cyc)
+ {
+-    if ((addr & 0xff00) == 0xfe00 && (addr < 0xfe24 || (addr >= 0xfe30 && addr < 0xfe38))) {
++    if ((addr & 0xff00) == 0xfe00 && (MODEL_B ? addr < 0xfe40 : (addr < 0xfe24 || (addr >= 0xfe30 && addr < 0xfe38)))) {
+         return 1;
+     }
+     return (cyc - m->crtc_synced) >= crtc_ticks_to_check(&m->crtc, m->crtc_synced);
+@@ -1245,7 +1315,7 @@
+ // palette) at about 360 clocks.
+ INLINE int io_write_keeps_schedule(const struct machine *m, uint16_t addr)
+ {
+-    if ((addr & 0xfffc) == 0xfe20) {
++    if (MODEL_B ? (addr & 0xfff0) == 0xfe20 : (addr & 0xfffc) == 0xfe20) {
+         return addr & 1;
+     }
+     if ((addr & 0xfff9) == 0xfe01) {
+@@ -1260,6 +1330,9 @@
+ // overlays of HAZEL (ACCCON Y) and ANDY (ROMSEL bit 7).
+ INLINE int paging_moves_fetch(const struct machine *m, uint16_t addr, uint8_t val)
+ {
++    if (MODEL_B) {
++        return 0;   // (nothing paged over what the display reads)
++    }
+     if (addr & 4) {
+         uint8_t d = val ^ m->acccon;
+         return (d & 1) || ((d & 0x08) && (val & 1));
+@@ -1300,7 +1373,7 @@
+         STAT(m->stat_io_page[(addr >> 4) & 7]);
+         STAT_CLK(m->stat_clk_sheila[(addr >> 4) & 7], v = sheila_read(m, addr));  // at the odd count, mid 1 MHz cycle
+         IO_AFTER_TICK();
+-    } else if ((addr & 0xfff8) == 0xfe30 && io_quiet_window(m, cyc + 1, &mask, &n)) {
++    } else if ((addr & (MODEL_B ? 0xfff0 : 0xfff8)) == 0xfe30 && io_quiet_window(m, cyc + 1, &mask, &n)) {
+         // Paging, read: no device is involved, so with nothing falling due
+         // before the tick the VIAs by subtraction and the CRTC left behind,
+         // as the general path below counts it. (evil-inf from 355 s reads
+@@ -1407,7 +1480,7 @@
+         STAT(m->stat_io_page[(addr >> 4) & 7]);
+         STAT_CLK(m->stat_clk_sheila[(addr >> 4) & 7], sheila_write(m, addr, val));
+         IO_AFTER_TICK_KEEP(keep);
+-    } else if (addr >= 0xfe20 && addr < 0xfe24) {
++    } else if (MODEL_B ? (addr & 0xfff0) == 0xfe20 : (addr >= 0xfe20 && addr < 0xfe24)) {
+         // Before the sync point nothing has fallen due, so a write that
+         // cannot move the schedule leaves it as it was.
+         int keep = io_write_keeps_schedule(m, addr);
+@@ -1422,7 +1495,7 @@
+         STAT(m->stat_io_page[(addr >> 4) & 7]);
+         STAT_CLK(m->stat_clk_sheila[(addr >> 4) & 7], sheila_write(m, addr, val));  // video ULA: access then tick
+         IO_AFTER_TICK_KEEP(keep);
+-    } else if ((addr & 0xfff8) == 0xfe30 && io_quiet_window(m, cyc + 1, &mask, &n)) {
++    } else if ((addr & (MODEL_B ? 0xfff0 : 0xfff8)) == 0xfe30 && io_quiet_window(m, cyc + 1, &mask, &n)) {
+         // Paging (ROMSEL, ACCCON), as the general path below: the tick,
+         // then the write. With nothing falling due before it, the VIAs by
+         // subtraction and the CRTC run up to it (paging changes what the
+@@ -1462,7 +1535,7 @@
+ #define CPU6502_IO_RD(cpu, addr) machine_io_rd(cpu, addr)
+ #define CPU6502_IO_WR(cpu, addr, v) machine_io_wr(cpu, addr, v)
+ #define CPU6502_CODE_ATTR MACHINE_CODE_ATTR
+-#define CPU6502_CMOS_ONLY 1   // the Master's 65C12
++#define CPU6502_CMOS_ONLY (!MODEL_B)   // the Master's 65C12, or the Model B's NMOS 6502
+ #include "cpu6502.c"
+ 
+ // Out of line: it runs at events, not per instruction, and the core's
+@@ -1583,7 +1656,7 @@
+ {
+     memset(m, 0, sizeof *m);
+     memcpy(m->cmos_ram, cmos_defaults, sizeof cmos_defaults);
+-    m->cpu.cmos = 1;
++    m->cpu.cmos = !MODEL_B;
+     m->cpu.m = m;
+     m->cpu.rd_tabs[0] = m->rd_tab[0];
+     m->cpu.rd_tabs[1] = m->rd_tab[1];

@@ -68,6 +68,25 @@ EXPORT("core_elk_boot") int core_elk_boot(const uint8_t **roms, const uint8_t *i
     return elk_core_boot(roms, image, size);
 }
 
+// ---- a BBC Model B instead (modelb/modelb.c: the Master core built again as a Model B), for Solid Elite for the BBC
+// Micro: core_mb_boot in place of core_boot, then the same calls. Its sound chip is this one
+int mb_boot(const uint8_t **roms, const uint8_t *image, uint32_t size);
+int mb_core_start(int skew, int mode);
+void mb_core_frame(int draw, uint8_t *px);
+void mb_key(int code, int down);
+void mb_analogue(int channel, int value);
+static int s_mb;
+void core_sn_write(uint8_t byte) { sn_write(&s_sn, byte); }
+// roms: 3 pointers of 16 KB each, the Model B's MOS 1.20, BASIC II and Acorn's 1770 DFS, in the page's memory (kept)
+EXPORT("core_mb_boot") int core_mb_boot(const uint8_t **roms, const uint8_t *image, uint32_t size) {
+    s_mb = 1;
+    sn_reset(&s_sn);
+    return mb_boot(roms, image, size);
+}
+
+const uint8_t *mb_ram(void);
+EXPORT("core_mb_ram") const uint8_t *core_mb_ram(void) { return mb_ram(); }     // (the Model B's main RAM: modelb/jsagent.mjs)
+
 EXPORT("core_alloc") void *core_alloc(uint32_t n) { return calloc(1, n); }
 
 // roms: 8 pointers of 16 KB each, the MOS then ROM slots 9 to 15, in the page's own memory (kept)
@@ -93,6 +112,7 @@ EXPORT("core_boot") int core_boot(const uint8_t **roms, const uint8_t *image, ui
 // Returns 0 if it isn't an Elite the player knows
 EXPORT("core_start") int core_start(int skew, int mode) {
     if (s_elk) return elk_core_start(skew, mode);
+    if (s_mb) return mb_core_start(skew, mode);
     beeb_frames(B, 700);
     for (int i = 0; i < 40; i++) { agent_ram(wasm_ram()); if (elite_detect(beeb_model(), wasm_ram())) break; beeb_frames(B, 50); }
     // (the Tube: the frame layer's code in, the parasite's code all loaded)
@@ -111,6 +131,11 @@ EXPORT("core_frame") void core_frame(int draw) {
         elk_core_frame(draw, s_px);
         return;
     }
+    if (s_mb) {
+        if (draw && !s_px) s_px = calloc(1, (size_t) RENDER_WIDTH * RENDER_HEIGHT);
+        mb_core_frame(draw, s_px);
+        return;
+    }
     agent_ram(wasm_ram());
     wasm_frame();
     if (draw) {
@@ -119,13 +144,14 @@ EXPORT("core_frame") void core_frame(int draw) {
     } else beeb_frames(B, 1);
 }
 
-EXPORT("core_key") void core_key(int code, int down) { if (s_elk) elk_core_key(code, down); else beeb_key(B, code, down); }
+EXPORT("core_key") void core_key(int code, int down) { if (s_elk) elk_core_key(code, down); else if (s_mb) mb_key(code, down); else beeb_key(B, code, down); }
 // (the Tube version reads the stick from JOPOS in the parasite's memory, but its host never sends it across: the host's
 // IRQ1 keeps the ADC's readings in its own memory. As Solid Elite's own agent harness does (tube/tools/tmachine.mjs),
 // the stick's high bytes go straight into the parasite's JOPOS, as a host that forwarded them would put them)
 enum { T_JOPOS = 0x0CA7 };
 EXPORT("core_analogue") void core_analogue(int channel, int value) {
     if (s_elk) return;          // (no analogue port on an Electron without a Plus 1; the port flies on keys)
+    if (s_mb) { mb_analogue(channel, value); return; }
     beeb_analogue(B, channel, value);
     if (tube_on && channel >= 0 && channel < 3) tube_mem()[T_JOPOS + channel] = (uint8_t) (value >> 8);
 }

@@ -4,7 +4,8 @@ import { wasiShim } from "./wasi_shim.js";
 export class Core {
     /** bytes: core.wasm; roms: 8 of 16 KB (the MOS, then slots 9 to 15); disc: an .ssd; hooks: { log(level, line), note(json),
      *  tubeRom: the 6502 Second Processor's 2 KB client ROM, to attach one (Solid Elite's Tube version),
-     *  electron: an Acorn Electron instead of the Master, roms then its 3 of 16 KB: MOS 1.00, BASIC II, the ACP 1770 DFS } */
+     *  electron: an Acorn Electron instead of the Master, roms then its 3 of 16 KB: MOS 1.00, BASIC II, the ACP 1770 DFS,
+     *  modelb: a BBC Model B instead, roms its 3 of 16 KB: MOS 1.20, BASIC II, Acorn's 1770 DFS } */
     static async create(bytes, roms, disc, hooks = {}) {
         const c = new Core();
         const dec = new TextDecoder();
@@ -24,7 +25,9 @@ export class Core {
         const ptrs = roms.map(put), table = c.x.core_alloc(4 * ptrs.length);
         new Uint32Array(mem.buffer, table, ptrs.length).set(ptrs);
         const d = put(disc);
-        if (hooks.electron) c.x.core_elk_boot(table, d, disc.length); else c.x.core_boot(table, d, disc.length);
+        if (hooks.electron) c.x.core_elk_boot(table, d, disc.length);
+        else if (hooks.modelb) c.x.core_mb_boot(table, d, disc.length);
+        else c.x.core_boot(table, d, disc.length);
         if (hooks.tubeRom) c.x.core_tube(put(hooks.tubeRom));
         c.width = c.x.core_width(); c.height = c.x.core_height();
         return c;
