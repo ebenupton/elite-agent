@@ -1,0 +1,13 @@
+Commander Claude: the elite-agent page with five Elite games. Upload this folder's contents as they are to any directory
+of an ordinary static web host: the page uses relative paths only (for example https://example.org/elite/).
+
+What the host needs: nothing special.
+- No server code, no special headers (no COOP/COEP: the page uses no SharedArrayBuffer), no MIME type for core.wasm
+  (the page fetches it as bytes; application/wasm is fine but not needed). HTTPS is recommended; plain HTTP works.
+- The visitor's browser fetches the ROMs and the Elite discs itself, from raw.githubusercontent.com at the commits in
+  pins.json. This site serves no ROMs or discs, so the host must not block the page from reaching GitHub (no strict
+  Content-Security-Policy connect-src).
+- index.html, app.js and style.css carry a version in their links (?v=...), so a new upload is picked up at once.
+
+Games: ?game=tube (the default), ?game=electron, ?game=modelb, ?game=flicker, ?game=solid; ?mode=curious|fair|optimal.
+Licences: LICENSES.txt.
