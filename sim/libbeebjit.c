@@ -141,6 +141,7 @@ void beeb_frames(beeb_t *b, int n)
 }
 
 uint8_t *beeb_ram(beeb_t *b) { return bbc_get_mem_read(b->bbc); }
+uint8_t *beeb_swram(beeb_t *b, int bank) { (void) b; (void) bank; return NULL; }       // (the Model B's: no Solid Elite here)
 uint64_t beeb_cycles(beeb_t *b) { return b->frames * 40000; }
 
 void beeb_key(beeb_t *b, int code, int down)

@@ -25,52 +25,21 @@ static const elite_ver_t MASTER = {
     .ni = 37, .save_cmp = 73, .title_type = {0, 0}, .kills_by_type = 1, .joy_fire_key = 1,
 };
 
-// Eben Upton's Solid Elite (github.com/ebenupton/solid-elite-bbc-master, its final layout: the game emitted in
-// low, hot and cold passes): the Master's game logic, iteration for iteration, laid out over main RAM, sideways
-// RAM banks 4 and 7 and HAZEL for a filled renderer. Its workspace WP is the Master's &0E41-&12A9 moved down
-// by &600 (each byte keeps its place in its page); the configuration from COMC is UP's workspace at the end of
-// the low pass (&2E00), NA% is in the hot pass's main RAM; zero page and K% are where they were.
-// Addresses from its assembled listing (3-assembled-output/compile.txt).
-static const elite_ver_t SOLID = {
-    .id = EV_SOLID, .name = "BBC Master Solid Elite (Eben Upton's port of SNG47)",
-    .A_ALTIT = 0x0C21, .A_ASH = 0x00D6, .A_AVL = 0x0C69, .A_BOMB = 0x0C5E, .A_BST = 0x0C5D, .A_CABTMP = 0x0874,
-    .A_CASH = 0x0C3D, .A_COMC = 0x2E00, .A_CRGO = 0x0C4A, .A_DAMP = 0x2E16, .A_DELTA = 0x0075, .A_DKCMP = 0x0C60,
-    .A_ECM = 0x0C5C, .A_ECMA = 0x0046, .A_ENERGY = 0x00D7, .A_ENGY = 0x0C5F, .A_ESCP = 0x0C62, .A_FIST = 0x0C68,
-    .A_FRIN = 0x0841, .A_FSH = 0x00D5, .A_GCNT = 0x0C43, .A_GHYP = 0x0C61, .A_GNTMP = 0x0879, .A_JSTX = 0x00C1,
-    .A_JSTY = 0x00C2, .A_JUNK = 0x0870, .A_K_PC = 0x0400, .A_LASCT = 0x0878, .A_LASER = 0x0C44, .A_LASX = 0x0C1E,
-    .A_MANY = 0x084E, .A_MCNT = 0x0084, .A_MJ = 0x0873, .A_MSAR = 0x0876, .A_MSTG = 0x005B, .A_NA_PC = 0x359A,
-    .A_NAME = 0x0C2C, .A_NOMSL = 0x0C67, .A_PATG = 0x2E18, .A_QQ0 = 0x0C35, .A_QQ1 = 0x0C36, .A_QQ10 = 0x00E2,
-    .A_QQ11 = 0x0081, .A_QQ12 = 0x0087, .A_QQ14 = 0x0C41, .A_QQ20 = 0x0C4B, .A_QQ22 = 0x0044, .A_QQ24 = 0x0C92,
-    .A_QQ25 = 0x0C93, .A_QQ26 = 0x0C7A, .A_QQ28 = 0x0C94, .A_QQ29 = 0x0C95, .A_QQ8 = 0x00DF, .A_QQ9 = 0x00E1,
-    .A_SSPR = 0x0850, .A_SVC = 0x0C7D, .A_TALLY = 0x0C7B, .A_TALLYL = 0x0C66, .A_TP = 0x0C34, .A_VIEW = 0x0877,
-    .A_de = 0x087D, .A_distaway = 0x0C29, .A_tek = 0x0C97,
-    .A_JSTK = 0x2E1C, .A_JSTE = 0x2E1B, .A_JSTGY = 0x2E1A, .A_DJD = 0x2E17, .A_ECMP = 0x0872, .A_BETA = 0x0042,
-    .A_XC = 0x0010, .A_YC = 0x0012, .A_RAND = 0x0002, .A_TYPE = 0x0085,
-    .ni = 37, .save_cmp = 73, .title_type = {0, 0}, .kills_by_type = 1, .joy_fire_key = 1,
-};
-
-// Solid Elite for the 6502 Second Processor (github.com/ebenupton/solid-elite-6502-second-processor, d52896e): the
-// whole game on the parasite, a 65C02 with a flat 64K, at the Master port's addresses, which is what the player is
-// given as its RAM; the host only draws. WP as Solid Elite's; UP (COMC on) at &2800 and NA% in the resident code.
-// Addresses from its parasite's symbols (tube/build/psyms.txt). The frame layer's borrowed zero page is put back by
-// the machine (web/tube/tube.c keeps the game's copy, f_zsv, in the view it gives the player), so not held here.
-static const elite_ver_t TUBE = {
-    .id = EV_TUBE, .name = "Solid Elite for the 6502 Second Processor (Eben Upton's Tube port of SNG47)",
-    .A_ALTIT = 0x0C21, .A_ASH = 0x00D6, .A_AVL = 0x0C69, .A_BOMB = 0x0C5E, .A_BST = 0x0C5D, .A_CABTMP = 0x0874,
-    .A_CASH = 0x0C3D, .A_COMC = 0x2800, .A_CRGO = 0x0C4A, .A_DAMP = 0x2816, .A_DELTA = 0x0075, .A_DKCMP = 0x0C60,
-    .A_ECM = 0x0C5C, .A_ECMA = 0x0046, .A_ENERGY = 0x00D7, .A_ENGY = 0x0C5F, .A_ESCP = 0x0C62, .A_FIST = 0x0C68,
-    .A_FRIN = 0x0841, .A_FSH = 0x00D5, .A_GCNT = 0x0C43, .A_GHYP = 0x0C61, .A_GNTMP = 0x0879, .A_JSTX = 0x00C1,
-    .A_JSTY = 0x00C2, .A_JUNK = 0x0870, .A_K_PC = 0x0400, .A_LASCT = 0x0878, .A_LASER = 0x0C44, .A_LASX = 0x0C1E,
-    .A_MANY = 0x084E, .A_MCNT = 0x0084, .A_MJ = 0x0873, .A_MSAR = 0x0876, .A_MSTG = 0x005B, .A_NA_PC = 0x2F6B,
-    .A_NAME = 0x0C2C, .A_NOMSL = 0x0C67, .A_PATG = 0x2818, .A_QQ0 = 0x0C35, .A_QQ1 = 0x0C36, .A_QQ10 = 0x00E2,
-    .A_QQ11 = 0x0081, .A_QQ12 = 0x0087, .A_QQ14 = 0x0C41, .A_QQ20 = 0x0C4B, .A_QQ22 = 0x0044, .A_QQ24 = 0x0C92,
-    .A_QQ25 = 0x0C93, .A_QQ26 = 0x0C7A, .A_QQ28 = 0x0C94, .A_QQ29 = 0x0C95, .A_QQ8 = 0x00DF, .A_QQ9 = 0x00E1,
-    .A_SSPR = 0x0850, .A_SVC = 0x0C7D, .A_TALLY = 0x0C7B, .A_TALLYL = 0x0C66, .A_TP = 0x0C34, .A_VIEW = 0x0877,
-    .A_de = 0x087D, .A_distaway = 0x0C29, .A_tek = 0x0C97,
-    .A_JSTK = 0x281C, .A_JSTE = 0x281B, .A_JSTGY = 0x281A, .A_DJD = 0x2817, .A_ECMP = 0x0872, .A_BETA = 0x0042,
-    .A_XC = 0x0010, .A_YC = 0x0012, .A_RAND = 0x0002, .A_TYPE = 0x0085,
-    .ni = 37, .save_cmp = 73, .title_type = {0, 0}, .kills_by_type = 1, .joy_fire_key = 1,
-};
+// Eben Upton's Solid Elite (github.com/ebenupton/solid-elite-bbc-master, its final layout: the game emitted in low, hot
+// and cold passes): the Master's game logic, iteration for iteration, laid out over main RAM, sideways RAM banks 4 and 7
+// and HAZEL for a filled renderer. Its workspace WP is the Master's moved down (each byte keeps its place in its page); the
+// configuration from COMC is UP's workspace after the low pass, NA% is in the hot pass's main RAM; zero page and K% are
+// where they were.
+// Solid Elite for the 6502 Second Processor (github.com/ebenupton/solid-elite-6502-second-processor): the whole game on
+// the parasite, a 65C02 with a flat 64K, which is what the player is given as its RAM (&0000-&7FFF); the host only draws.
+// WP, K%, UP (COMC on) and NA% are the parasite's own. The frame layer's borrowed zero page is put back by the machine
+// (web/core_wasm.c and web/tube/tube.c keep the game's copy, f_zsv, in the view it gives the player), so not held here.
+// Both tables, and how each game is recognised and its frame layer seen, are generated from the pinned build's symbols
+// and binaries (web/tools/gen-solid.mjs): run it again whenever a game is re-pinned.
+#include "elite_ver_solid.h"
+#include "elite_ver_tube.h"
+static const elite_ver_t SOLID = EV_SOLID_INIT;
+static const elite_ver_t TUBE = EV_TUBE_INIT;
 
 // (the disc version keeps its workspace in zero page, page 3 and K% at &0900; it loads its docked code
 // (T.CODE) and flight code (D.CODE) over each other at &11E3, and none of these addresses is in them)
@@ -120,15 +89,14 @@ static int is_master(const uint8_t *ram)
 }
 static int is_solid(const uint8_t *ram)
 {
-    // BCODE (loaded at &1E24): its glue area's first page (to7, to4, TTX66M and the stubs into the cold
-    // pass) and the main flight loop at &3000, in the hot pass (SNG47's &4000 is Solid Elite's screen)
-    return fnv(ram + 0x1E24, 256) == 0x54FECC20u && fnv(ram + 0x3000, 256) == 0x6CD52F11u;
+    // BCODE's first page (its glue area: the stubs that page the banks) and the main loop's M%, in the hot pass's main
+    // RAM (SNG47's &4000 is Solid Elite's screen)
+    return fnv(ram + EV_SOLID_SIG1_AT, 256) == EV_SOLID_SIG1 && fnv(ram + EV_SOLID_SIG2_AT, 256) == EV_SOLID_SIG2;
 }
 static int is_tube(const uint8_t *ram)
 {
-    // the parasite's resident code (PCODE, loaded at &1400 over the Tube, in order): &7E00, near the end of what the player sees, and the page of
-    // the main loop (MLOOP, &5148)
-    return fnv(ram + 0x7E00, 256) == 0x83ECC2C1u && fnv(ram + 0x5100, 256) == 0xCD182595u;
+    // the parasite's resident code (PCODE, loaded over the Tube): TT100 and MLOOP, the main loop's two parts
+    return fnv(ram + EV_TUBE_SIG1_AT, 256) == EV_TUBE_SIG1 && fnv(ram + EV_TUBE_SIG2_AT, 256) == EV_TUBE_SIG2;
 }
 static int is_disc(const uint8_t *ram)
 {
@@ -166,6 +134,7 @@ int elite_detect(int model, const uint8_t *ram)
 int g_zp_held;
 uint8_t g_zp_keep[50];
 int g_view_latch = -1;
+const uint8_t *g_ev_swram[4];
 void elite_forget(void) { memset(&g_ev, 0, sizeof g_ev); g_zp_held = 0; g_view_latch = -1; }
 
 void elite_zp_frame(const uint8_t *ram)
@@ -183,23 +152,26 @@ void elite_zp_frame(const uint8_t *ram)
     else view = 0;
     g_view_latch = q == 0 && view ? view : -1;
     if (g_ev.id == EV_TUBE) { g_zp_held = 0; return; }     // (the machine gives the game's zero page: TUBE above)
-    // (&F4 always matches ROMSEL: the frame layer is bank 6, the rasteriser bank 5 or &85 (ANDY over 5);
-    // the game is bank 4, or 7 for its cold pass (the docked screens, the launch, hyperspace, the title).
-    // Bank 7 is also the beach ball's meridian window, which the frame pages in to draw the planet (&10-&27
-    // borrowed, and the frame's &D2-&E1) and the game to set it up (&10-&28): only in a space view, where
-    // the cold pass is set-up code that changes none of these the player waits on, so held there too. Bank 6
-    // also prints text, with zero page intact: a frame's staleness)
+    // (&F4 always matches ROMSEL: the frame layer is bank 6, the rasteriser bank 5 or &85 (ANDY over 5); the game is
+    // bank 4, or 7 for its cold pass (the docked screens, the launch, hyperspace, the title). Bank 7 is also the beach
+    // ball's meridian window, which the frame pages in to draw the planet (&10-&27 borrowed, and the frame's &D2-&E1)
+    // and the game to set it up (&10-&28): only in a space view, where the cold pass is set-up code that changes none
+    // of these the player waits on, so held there too. Bank 4 with GPRJ set is the frame running game code (T_GAME:
+    // the ships' projection, the clouds). Bank 6 also prints text, with zero page intact: a frame's staleness.
+    // The build's banks: EV_SOLID_HELD, elite_ver_solid.h)
     int bank = ram[0xF4];
-    g_zp_held = bank == 5 || bank == 6 || bank == 0x85 || (bank == 7 && q == 0);
-    if (!g_zp_held) memcpy(g_zp_keep, ram + 0x06, 34), memcpy(g_zp_keep + 34, ram + 0xD2, 16);
-    // (F_FRAME, the frame layer's once-an-iteration render, saves Elite's zero page on the stack as it starts,
-    // &06-&27 then &D2-&E1, one PHA each, from S = &F5 on this build: seen by its return addresses above, at &1F6-&1F9.
-    // There the copy is Elite's, whatever the frame has done to the zero page since. Without it, a quiet space view
-    // (the regeneration between witchspace fights: the game waits out each frame in F_FRAME) froze our energy and
-    // shields for minutes, and the chain of mis-jumps broke after one wave every time)
-    else if (bank == 6 && ram[0x1F6] == 32 && ram[0x1F7] == 37 && ram[0x1F8] == 105 && ram[0x1F9] == 38) {
-        for (int z = 0; z < 34; z++) g_zp_keep[z] = ram[0x1F5 - z];
-        for (int k = 0; k < 16; k++) g_zp_keep[34 + k] = ram[0x1F5 - 34 - k];
-    }
+    g_zp_held = EV_SOLID_HELD(bank, q) || (EV_SOLID_GPRJ && bank == EV_SOLID_BANK_GAME && ram[EV_SOLID_GPRJ]);
+    if (!g_zp_held) { memcpy(g_zp_keep, ram + 0x06, 34), memcpy(g_zp_keep + 34, ram + 0xD2, 16); return; }
+    // (F_FRAME, the frame layer's once-an-iteration render, keeps Elite's zero page as it starts, &06-&27 then
+    // &D2-&E1: in f_zsv, in its bank (in older builds, pushed on the stack under its return addresses); seen by those
+    // return addresses, at EV_SOLID_RET_AT. There the copy is Elite's, whatever the frame has done to the zero page
+    // since. Without it, a quiet space view (the regeneration between witchspace fights: the game waits out each frame
+    // in F_FRAME) froze our energy and shields for minutes, and the chain of mis-jumps broke after one wave every time)
+    static const uint8_t ret[4] = EV_SOLID_RET;
+    if (memcmp(ram + EV_SOLID_RET_AT, ret, 4)) return;
+    const uint8_t *zsv = EV_SOLID_ZSV && g_ev_swram[EV_SOLID_ZSV_BANK - 4] ? g_ev_swram[EV_SOLID_ZSV_BANK - 4] + (EV_SOLID_ZSV - 0x8000) : NULL;
+    if (EV_SOLID_ZSV ? !zsv : bank != 6) return;
+    for (int i = 0; i < 50; i++)
+        if (EV_SOLID_ZSV_KEPT >> i & 1) g_zp_keep[i] = zsv ? zsv[i] : ram[EV_SOLID_RET_AT - 1 - i];
 }
 void elite_assume_master(void) { g_ev = MASTER; }

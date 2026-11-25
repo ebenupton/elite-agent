@@ -42,8 +42,10 @@ int elite_detect(int model, const uint8_t *ram);
 void elite_forget(void);
 // Once a frame, before the player reads: zero page as the game has it (state.h's R()). Solid Elite's renderer
 // borrows &06-&27 and &D2-&E1 (ENERGY, the shields, QQ8-QQ10, the text cursor) while it draws, its
-// bank paged; caught mid-draw, those bytes are kept from the last frame that wasn't.
+// bank paged; caught mid-draw, those bytes are the game's own copy (its frame layer keeps it in its bank: the machine
+// gives its sideways RAM in g_ev_swram), or else kept from the last frame that wasn't.
 void elite_zp_frame(const uint8_t *ram);
+extern const uint8_t *g_ev_swram[4];    // the Master's sideways RAM banks 4-7, as the machine has them (NULL: not given)
 // (the Master's table, as the build had it fixed: run_sim and lab before a machine is up)
 void elite_assume_master(void);
 // (the Master's game: SNG47 or Solid Elite, which plays the same game at other addresses)

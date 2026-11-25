@@ -25,6 +25,7 @@ const char *beeb_emu_dir(void);
 void beeb_frames(beeb_t *b, int n);
 int beeb_reboot(beeb_t *b);
 uint8_t *beeb_ram(beeb_t *b);
+uint8_t *beeb_swram(beeb_t *b, int bank);
 void beeb_key(beeb_t *b, int code, int down);
 size_t beeb_state_size(void);
 void beeb_save(beeb_t *b, uint8_t *buf);
@@ -383,6 +384,7 @@ int main(int argc, char **argv) {
     if (getenv("DISC")) snprintf(disc, sizeof disc, "%s", getenv("DISC"));      // (DISC=file.ssd: another copy of the disc, a career saved on it)
     B = beeb_new(roms, argc > 2 && *argv[2] ? argv[2] : disc);
     if (!B) { fprintf(stderr, "beeb_new failed\n"); return 1; }
+    for (int i = 0; i < 4; i++) g_ev_swram[i] = beeb_swram(B, 4 + i);      // (Solid Elite's frame layer keeps its zero page in bank 6: elite_zp_frame)
     journal = fopen(argc > 3 ? argv[3] : "/dev/null", "w");
     { extern int g_launch_clear; if (getenv("LCLEAR")) g_launch_clear = atoi(getenv("LCLEAR")); }
     { extern int g_undamped; if (getenv("UNDAMPED")) g_undamped = atoi(getenv("UNDAMPED")); }

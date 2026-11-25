@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include "elite_ver.h"
+#include "elite_ver_tube.h"
 int core_boot(const uint8_t **roms, const uint8_t *image, uint32_t size);
 void core_tube(const uint8_t *rom);
 int core_start(int skew, int mode);
@@ -36,13 +38,13 @@ int main(int argc, char **argv) {
     int mode = getenv("MODE") ? atoi(getenv("MODE")) : 2;
     int ok = core_start(13, mode);
     printf("core_start: %d, hooks %08x\n", ok, core_tube_hooks());
-    { extern uint8_t *core_tube_mem(void); uint8_t *pm = core_tube_mem(); printf("F_FRAME:"); for (int i = 0; i < 16; i++) printf(" %02x", pm[0x7FCE + i]); printf("  @80d8:"); for (int i = 0; i < 8; i++) printf(" %02x", pm[0x80d8 + i]); printf("\n"); }
+    { extern uint8_t *core_tube_mem(void); uint8_t *pm = core_tube_mem(); unsigned hk = (unsigned) core_tube_hooks(); printf("F_FRAME:"); for (int i = 0; i < 16; i++) printf(" %02x", pm[EV_TUBE_F_FRAME + i]); printf("  hooks:"); for (int i = 0; i < 3; i++) printf(" %02x", pm[(hk >> 16) + i]); printf(" /"); for (int i = 0; i < 3; i++) printf(" %02x", pm[(hk & 0xFFFF) + i]); printf("\n"); }
     if (!ok) return 1;
     int frames = atoi(argv[4]), shot = getenv("SHOT") ? atoi(getenv("SHOT")) : 0;
     for (int f = 1; f <= frames; f++) {
         int draw = shot && (f % shot == 0 || f % shot == shot - 1);
         core_frame(draw);
-        if (getenv("PEEK") && f % atoi(getenv("PEEK")) == 0) { extern uint8_t *wasm_ram(void); uint8_t *r = wasm_ram(); printf("%7d QQ11 %02x QQ12 %02x MCNT %02x JSTX %02x JSTY %02x JSTK %02x ALP1 %02x BET1 %02x\n", f, r[0x81], r[0x87], r[0x84], r[0xC1], r[0xC2], r[0x281C], r[0x31], r[0x2B]); }
+        if (getenv("PEEK") && f % atoi(getenv("PEEK")) == 0) { extern uint8_t *wasm_ram(void); uint8_t *r = wasm_ram(); printf("%7d QQ11 %02x QQ12 %02x MCNT %02x JSTX %02x JSTY %02x JSTK %02x ALP1 %02x BET1 %02x\n", f, r[0x81], r[0x87], r[0x84], r[0xC1], r[0xC2], r[g_ev.A_JSTK], r[0x31], r[0x2B]); }
         if (shot && f % shot == 0) {
             char p[64]; snprintf(p, sizeof p, "run%07d.ppm", f);
             FILE *o = fopen(p, "wb"); int W = core_width(), H = core_height(); fprintf(o, "P6 %d %d 255\n", W, H);

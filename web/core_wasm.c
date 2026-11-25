@@ -28,9 +28,11 @@ uint8_t *tube_mem(void);
 extern int tube_on, tube_zp_held;
 extern uint16_t tube_hook_on, tube_hook_off;
 static int s_zp_fix;
-// (the pinned disc's parasite symbols, tube/build/psyms.txt at d52896e: F_FRAME keeps &06-&27 and FZ's &D2-&E1 in f_zsv
-// from its BIT GMODE to the JSR p_flip after it puts them back; found in its code, so a disc built otherwise is left alone)
-enum { T_F_FRAME = 0x7FCE, T_FF_STARS9 = 0x814F, T_GMODE = 0x1400, T_P_FLIP = 0x1BFD, T_F_ZSV = 0x1FD7 };
+// (the pinned disc's parasite symbols, generated from its build (cplayer/elite_ver_tube.h, web/tools/gen-solid.mjs): F_FRAME
+// keeps &06-&27 and FZ's &D2-&E1 in f_zsv from its BIT GMODE to the JSR p_flip after it puts them back; found in its code,
+// so a disc built otherwise is left alone)
+#include "elite_ver_tube.h"
+enum { T_F_FRAME = EV_TUBE_F_FRAME, T_FF_STARS9 = EV_TUBE_FF_STARS9, T_GMODE = EV_TUBE_GMODE, T_P_FLIP = EV_TUBE_P_FLIP, T_F_ZSV = EV_TUBE_F_ZSV };
 static void tube_find_hooks(void) {
     const uint8_t *pm = tube_mem();
     int on = 0, off = 0;
@@ -45,7 +47,8 @@ static void agent_ram(uint8_t *ram) {
     if (!tube_on) { memcpy(ram, beeb_ram(B), 0x8000); return; }
     const uint8_t *pm = tube_mem();
     memcpy(ram, pm, 0x8000);
-    if (s_zp_fix && tube_zp_held) { memcpy(ram + 0x06, pm + T_F_ZSV, 0x22); memcpy(ram + 0xD2, pm + T_F_ZSV + 0x22, 16); }
+    if (s_zp_fix && tube_zp_held)       // (the bytes F_FRAME keeps: &06-&27, then &D2-&E1)
+        for (int i = 0; i < 0x22 + 16; i++) if (EV_TUBE_ZSV_KEPT >> i & 1) ram[i < 0x22 ? 0x06 + i : 0xD2 - 0x22 + i] = pm[T_F_ZSV + i];
 }
 // a parasite on the Tube, its 2 KB client ROM (in the page's memory): after core_boot, before core_start
 EXPORT("core_tube") void core_tube(const uint8_t *rom) { tube_init(rom); }
@@ -95,6 +98,7 @@ EXPORT("core_boot") int core_boot(const uint8_t **roms, const uint8_t *image, ui
     struct machine *m = &B->m;
     machine_init(m);
     for (int i = 0; i < MACHINE_SWRAM_SLOTS; i++) m->swram[i] = calloc(0x4000, 1);
+    { extern const uint8_t *g_ev_swram[4]; for (int i = 0; i < 4; i++) g_ev_swram[i] = m->swram[i]; }     // (Solid Elite's f_zsv: elite_zp_frame)
     m->mos = roms[0];
     for (int i = 0; i < 7; i++) m->rom[0x9 + i] = roms[1 + i];
     m->vs = NULL;
@@ -118,7 +122,7 @@ EXPORT("core_start") int core_start(int skew, int mode) {
     // (the Tube: the frame layer's code in, the parasite's code all loaded)
     for (int i = 0; tube_on && i < 40 && (tube_find_hooks(), !s_zp_fix); i++) beeb_frames(B, 50);
     // (and its first title screen up, as the Master's games are after the 700 frames: QQ12 set, QQ11 0, distaway 200)
-    for (int i = 0; tube_on && i < 40 && !(tube_mem()[0x87] && !tube_mem()[0x81] && tube_mem()[0xC29] == 200); i++) beeb_frames(B, 50);
+    for (int i = 0; tube_on && i < 40 && !(tube_mem()[EV_TUBE_QQ12] && !tube_mem()[EV_TUBE_QQ11] && tube_mem()[EV_TUBE_DISTAWAY] == 200); i++) beeb_frames(B, 50);
     beeb_frames(B, skew);
     agent_ram(wasm_ram());
     return wasm_init(mode, beeb_model());
@@ -147,8 +151,10 @@ EXPORT("core_frame") void core_frame(int draw) {
 EXPORT("core_key") void core_key(int code, int down) { if (s_elk) elk_core_key(code, down); else if (s_mb) mb_key(code, down); else beeb_key(B, code, down); }
 // (the Tube version reads the stick from JOPOS in the parasite's memory, but its host never sends it across: the host's
 // IRQ1 keeps the ADC's readings in its own memory. As Solid Elite's own agent harness does (tube/tools/tmachine.mjs),
-// the stick's high bytes go straight into the parasite's JOPOS, as a host that forwarded them would put them)
-enum { T_JOPOS = 0x0CA7 };
+// the stick's high bytes go straight into the parasite's JOPOS, as a host that forwarded them would put them. Builds from
+// 0ee4bb5 on do forward them (tube/src/h-joy.asm: the parasite asks for the host's JOPOS before each key poll), with the
+// same bytes, as the host's IRQ1 samples them)
+enum { T_JOPOS = EV_TUBE_JOPOS };
 EXPORT("core_analogue") void core_analogue(int channel, int value) {
     if (s_elk) return;          // (no analogue port on an Electron without a Plus 1; the port flies on keys)
     if (s_mb) { mb_analogue(channel, value); return; }

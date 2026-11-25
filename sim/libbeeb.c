@@ -83,6 +83,7 @@ void beeb_frames(beeb_t *b, int n)
 }
 
 uint8_t *beeb_ram(beeb_t *b) { return b->m.ram; }
+uint8_t *beeb_swram(beeb_t *b, int bank) { return bank >= 4 && bank < 4 + MACHINE_SWRAM_SLOTS ? b->m.swram[bank - 4] : NULL; }      // (sideways RAM bank 4-7)
 uint64_t beeb_cycles(beeb_t *b) { return b->m.cpu.cycles; }
 
 void beeb_key(beeb_t *b, int code, int down)
