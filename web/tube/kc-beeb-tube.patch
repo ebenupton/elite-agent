@@ -1,6 +1,6 @@
 diff -ru a/machine.c b/machine.c
---- a/machine.c	2026-11-10 19:33:39
-+++ b/machine.c	2026-11-10 19:33:54
+--- a/machine.c
++++ b/machine.c
 @@ -41,6 +41,12 @@
  #define CRTC_API MACHINE_CODE_ATTR
  
@@ -45,12 +45,15 @@ diff -ru a/machine.c b/machine.c
      case 0xfe00: case 0xfe04:
          if ((addr & 1) && m->vs && (m->crtc.addr_reg & 0x1f) <= 9) {
              vs_put(m->vs, VS_EV(VS_FRAMING, 0));
-@@ -1623,9 +1637,29 @@
+@@ -1623,9 +1637,39 @@
      fdc_power_on_reset(&m->fdc);
  }
  
 +// With a parasite on the Tube, the two in slices of TUBE_SLICE host cycles: the host, then the parasite up to the same
-+// time. An IRQ the parasite raised or dropped on the host is taken up at the host's next cycle (as a late level).
++// time. An IRQ the parasite raised or dropped on the host is taken up at the host's next cycle (as a late level). The
++// slices end at multiples of TUBE_SLICE host cycles (the host's first instruction boundary at or after one), whatever
++// `until` is: a run that ends inside a slice leaves the parasite where it was, for the next run to finish the slice, so
++// running a frame in pieces (as a picture does) interleaves the two exactly as running it whole.
 +#ifndef TUBE_SLICE
 +#define TUBE_SLICE 8
 +#endif
@@ -62,8 +65,15 @@ diff -ru a/machine.c b/machine.c
 +    }
 +    uint64_t start = m->cpu.cycles;
 +    while (m->cpu.cycles < until) {
-+        uint64_t to = m->cpu.cycles + TUBE_SLICE;
-+        cpu6502_run(&m->cpu, to < until ? to : until);
++        uint64_t to = (m->cpu.cycles / TUBE_SLICE + 1) * TUBE_SLICE;
++        if (to > until) {
++            cpu6502_run(&m->cpu, until);
++            if (m->cpu.cycles < to) {
++                break;
++            }
++        } else {
++            cpu6502_run(&m->cpu, to);
++        }
 +        uint8_t before = tube_host_irq;
 +        tube_par_run(m->cpu.cycles);
 +        if (tube_host_irq != before) {

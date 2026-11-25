@@ -100,10 +100,18 @@ struct machine *mb_machine(void) { return M; }
 void mb_noboot(void) { M->key_head = M->key_count = 0; machine_set_key(M, 0, 0, 0); }
 void mb_run(uint64_t cycles) { machine_run(M, M->cpu.cycles + cycles); }
 uint32_t mb_undoc(uint16_t *pc) { if (pc) *pc = s_undoc_pc; return s_undoc; }
-// a key of the BBC matrix (row << 4 | column, the player's codes), a little after now, as the Master's beeb_key
-void mb_key(int code, int down) { machine_queue_key(M, M->synced + 2000, (code >> 4) & 7, code & 15, down); }
+// a key of the BBC matrix (row << 4 | column, the player's codes), a little after now, as the Master's beeb_key, and the
+// machine rescheduled, so that the 6502 syncs at the key's cycle: without, the keyboard interrupt it raises was seen at the
+// 6502's next sync point, which depended on where a run ended (a picture runs its frame in pieces: drawing every 7th frame
+// parted from drawing none 13,076 frames into a career)
+void mb_key(int code, int down)
+{
+    machine_queue_key(M, M->synced + 2000, (code >> 4) & 7, code & 15, down);
+    machine_schedule(M);
+    cpu6502_set_sync_due(&M->cpu, M->sync_due);
+}
 void mb_analogue(int channel, int value) { machine_set_analogue(M, channel, (uint16_t) value); }
-// a slot's 16 KB (sideways RAM 4-7, a ROM, or NULL)
+// a slot's 16 KB (sideways RAM 0-7, a ROM, or NULL)
 const uint8_t *mb_slot(int s)
 {
     s &= 15;
