@@ -87,11 +87,12 @@ in its description.
 
 | What | Version |
 |---|---|
-| `web/core.wasm` | sha256 `0efef07bc027b2345cc5c962ef4ab7e9f71fb82e171ec3504831d2ef49d8b383`, built by `web/build.sh` with clang 19 on arm64 (the careers above were flown on `16783057…`; the change since is the page's docking-action flag only, and both discs' 10-minute journals are unchanged) |
+| `web/core.wasm` | the sha256 in `web/core.wasm.sha256`, built by `web/tube/build.sh` (the careers above were flown on `16783057…`) |
 | Emulator | Kieran Connell's Master core, in `8bitkick/rp2350-bbc-micro@b8232984` (`src/cores/kc-beeb`), from [esp32-beeb](https://github.com/kieranhj/esp32-beeb) |
 | ROMs | MOS 3.20 set, `scarybeasts/beebjit@db16aaf0` (`roms/mos3.20`) |
-| flicker-free disc | `markmoxon/elite-source-code-bbc-master@e6581b58`, sha256 `3c7b7e55...` |
-| Solid disc | `ebenupton/solid-elite-bbc-master@262bfa61`, sha256 `0896826f...` |
+| Discs | each game's at the commit in [pins.json](pins.json); the careers above were flown on the flicker-free disc at `e6581b58` and Solid at `262bfa61` |
 
 The page and `fly.sh` use this one file, and `build_site.sh` stops if its hash doesn't match `web/core.wasm.sha256`. Changes to
-`cplayer/` don't reach the page until a new one is pinned, and a new pin means the careers here must be flown again.
+`cplayer/` don't reach the page until a new one is pinned, and a new pin means the careers here must be flown again: Solid's
+row is for its old disc, which the player no longer recognises. The flicker-free disc's 10-minute Fair journal is unchanged
+(`af1bfe51…`).

@@ -14,6 +14,6 @@ rm -rf build/kc-beeb && cp -r $KC build/kc-beeb
 $CC -O2 -fwrapv -Wno-everything -DMB_TRACE -I../../cplayer -Ibuild/kc-beeb -o build/mbh \
   mbh.c modelb.c ../../cplayer/elite_ver.c
 FILES=(); for f in keyq agent cfly combat docked drv elite_ver fair flight galaxy pilot ships show wsp_pilot wsp_dock; do FILES+=(../../cplayer/$f.c); done
-$CC -O2 -fwrapv -std=gnu2x -I../../cplayer -Ibuild/kc-beeb -I.. -I../electron -DPLAYER_CURIOUS=0 -Wno-everything \
+$CC -O2 -fwrapv -std=gnu2x -I../../cplayer -Ibuild/kc-beeb -I.. -I../electron -DPLAYER_CURIOUS=0 $NATIVE_FLAGS -Wno-everything \
   -o build/native_run native_run.c ../core_wasm.c ../player_wasm.c ../tube/tube.c ../electron/elk.c ../electron/core_elk.c modelb.c "${FILES[@]}" -lm
 ls -l build/mbh build/native_run

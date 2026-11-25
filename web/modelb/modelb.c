@@ -126,9 +126,33 @@ static struct vstream s_stream;
 static struct render s_render;
 static render_px *s_canvas;
 static int32_t s_vofs;
+#ifdef MB_HSYNC_CHECK
+// (debugging: the stream's ticks between horizontal syncs, each line's length, printed when not the usual)
+#include <stdio.h>
+static uint32_t s_chk_ticks, s_chk_line, s_chk_bad;
+static void hsync_check(const struct vstream *vs)
+{
+    for (uint32_t i = vs->tail; i != vs->head; i++) {
+        uint16_t w = vs->ring[i & (VS_RING - 1)];
+        if (!(w & VS_EVENT)) { s_chk_ticks += (w & VS_PAIR) ? 2 : 1; continue; }
+        switch (w & 0xff) {
+        case VS_SKIP: s_chk_ticks += w >> 8; break;
+        case VS_VSYNC: if (w >> 8) { if (s_chk_line != 312) printf("    vsync after %u lines\n", s_chk_line); s_chk_line = 0; } break;
+        case VS_ULACTRL: if (getenv("ULALOG")) printf("    line %u tick %u ULA %02x\n", s_chk_line, s_chk_ticks, w >> 8); fflush(stdout); break;
+        case VS_HSYNC:
+            if (s_chk_ticks != MB_HSYNC_CHECK) { printf("    line %u: %u ticks\n", s_chk_line, s_chk_ticks); s_chk_bad++; }
+            s_chk_ticks = 0; s_chk_line++; fflush(stdout);
+            break;
+        }
+    }
+}
+#endif
 static void consume(void)
 {
     struct vstream *vs = &s_stream;
+#ifdef MB_HSYNC_CHECK
+    hsync_check(vs);
+#endif
     while (vs_available(vs) > 0) {
         uint16_t w = vs->ring[vs->tail & (VS_RING - 1)];
         if (!(w & VS_EVENT)) {

@@ -1,7 +1,7 @@
 # Solid Elite on the 6502 Second Processor
 
 This fork's page flies Eben Upton's [Solid Elite for the 6502 Second Processor](https://github.com/ebenupton/solid-elite-6502-second-processor)
-(its disc at d52896e) in Curious mode, on Kieran Connell's Master core with a 6502 Second Processor attached to its Tube.
+(its disc at the commit in [../pins.json](../pins.json)) in Curious mode, on Kieran Connell's Master core with a 6502 Second Processor attached to its Tube.
 The page's defaults are `?game=tube&mode=curious`; the Wireframe and Solid (Master) games and the other modes are still there.
 
 ## What was added
@@ -12,20 +12,23 @@ The page's defaults are `?game=tube&mode=curious`; the Wireframe and Solid (Mast
   jsbeeb's `6502Tube.rom`, which the page fetches from jsbeeb's repository at a pinned commit.
 - **The host side** ([kc-beeb-tube.patch](kc-beeb-tube.patch), applied to a copy of the core by [build.sh](build.sh)): the
   ULA at &FEE0-&FEFF in SHEILA, its interrupt in the host's IRQ level, and `machine_run()` running the host and the parasite
-  in slices of 8 host cycles, the parasite at 4 MHz (the Master's internal 65C102). With no parasite attached the core is as
+  in slices of 8 host cycles, the parasite at 4 MHz (the Master's internal 65C102). The slices end at multiples of 8 host
+  cycles whatever a run's length, so a frame run in pieces (a picture) interleaves the two as a frame run whole: drawing
+  changes no career. With no parasite attached the core is as
   it was: a 10-minute Fair career on the flicker-free disc gives the same journal as the upstream core.wasm.
 - **The player's view** ([../core_wasm.c](../core_wasm.c)): the game is on the parasite, so the player's 32 KB of RAM is the
   parasite's &0000-&7FFF. Two things are put right in it:
   - Solid Elite's frame layer borrows the game's zero page (&06-&27 and &D2-&E1: energy, shields, the text cursor) while it
     draws, keeping the game's copy in `f_zsv`. Between its `BIT GMODE` and the `JSR p_flip` after it puts them back (found in
     F_FRAME's code at start-up), the player sees the game's copy.
-  - The Tube version reads the joystick from JOPOS in the parasite, but its host never sends the stick across (the host's IRQ1
-    keeps the ADC's readings in its own memory; on a real machine the Tube version is a keyboard game). As Solid Elite's own
-    agent harness does (`tube/tools/tmachine.mjs`), the agent's stick goes straight into the parasite's JOPOS (&0CA7).
+  - The Tube version reads the joystick from JOPOS in the parasite. Its host now forwards the stick itself (0ee4bb5's
+    `tube/src/h-joy.asm`); as before, and as Solid Elite's own agent harness does, the agent's stick also goes straight into
+    the parasite's JOPOS (generated: &0AA7 at 0ee4bb5), which is harmless.
   - `core_start` waits for the whole of the parasite's code and the first title screen, which come later over the Tube.
-- **The player** ([../../cplayer/elite_ver.c](../../cplayer/elite_ver.c)): `EV_TUBE`, the addresses from the parasite's
-  symbols (`tube/build/psyms.txt`: WP and zero page as Solid Elite's, UP at &2800, NA% at &2F6B), recognised by two pages of
-  its resident code; it takes Solid Elite's docked-screen and briefing handling (`ev_solid()`).
+- **The player** ([../../cplayer/elite_ver.c](../../cplayer/elite_ver.c)): `EV_TUBE`, its addresses, signatures and the
+  frame layer's hooks generated from the parasite's symbols (`tube/build/psyms.txt`) by [../tools/gen-solid.mjs](../tools/gen-solid.mjs)
+  into `cplayer/elite_ver_tube.h`, as Solid Elite's (`elite_ver_solid.h`); it takes Solid Elite's docked-screen and briefing
+  handling (`ev_solid()`).
 
 ## Building
 

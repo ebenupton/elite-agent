@@ -77,6 +77,9 @@ await frames(SKEW);
 view();
 if (!x.wasm_init(MODE, 1)) throw new Error("jsbeeb's player: no Elite");
 
+// (RUPTS=1: count jsbeeb's entries to the rupture (RUPT, &7700) and to the MOS's T1 service with RUPT skipped)
+let rupts = 0, ruptLast = 0;
+if (process.env.RUPTS) cpu.debugInstruction.add((a) => { if (a === 0x7700) rupts++; return false; });
 // ---- side by side
 const dump = (name, a) => writeFileSync(`${OUT}/${name}`, a);
 if (SHOTS.size) mkdirSync(OUT, { recursive: true });
@@ -93,7 +96,8 @@ const corner = (get, W, H) => { for (let y = 0; y < H; y++) for (let x = 0; x < 
 const MCNT = A("MCNT"); let itA = 0, itB = 0, lastA = -1, lastB = -1;
 for (let f = 0; f < FRAMES; f++) {
     // core.wasm: its frame (the view, the player, the machine); its view is what the player saw
-    core.frame(SHOTS.has(f) || (f >= cmpFrom && f < cmpTo));
+    const BRK = +(process.env.BROKEN || 0);
+    core.frame(SHOTS.has(f) || (f >= cmpFrom && f < cmpTo) || (BRK && f % BRK === 0));
     const vA = core.ram(0, 0x8000);
     // jsbeeb
     frameNo = x.wasm_frame_no();
@@ -142,6 +146,14 @@ for (let f = 0; f < FRAMES; f++) {
             }
         }
     }
+    // (BROKEN=n: every nth frame, whether each picture is whole: a broken split screen shows the frame's yellow side in
+    // its middle)
+    if (BRK && f % BRK === 0) {
+        const px = core.rgba(), fb = s._completeFb8;
+        let ya = 0, yb = 0;
+        for (let r = 150; r < 450; r++) { if ((px[r * core.width + 384] & 0xffffff) === 0x00ffff) ya++; const o = (r * 1024 + 520) * 4; if (fb[o] > 127 && fb[o + 1] > 127 && fb[o + 2] < 128) yb++; }
+        if (ya > 100 || yb > 100) console.log(`  frame ${f}: picture broken on ${[ya > 100 ? "core.wasm" : "", yb > 100 ? "jsbeeb" : ""].filter(Boolean).join(" and ")}`);
+    }
     if (SHOTS.has(f)) {
         dump(`f${f}-core.mem`, Buffer.from(core.ram(0, 0x8000).buffer));
         dump(`f${f}-jsbeeb.mem`, Buffer.from(cpu.ramRomOs.subarray(0, 0x8000)));
@@ -149,6 +161,7 @@ for (let f = 0; f < FRAMES; f++) {
         dump(`f${f}-jsbeeb.rgba`, Buffer.from(s._completeFb8));
     }
     if (process.env.EVERY && f % +process.env.EVERY === 0) console.log(`  ${f}: it ${itA}/${itB} QQ11 ${vA[A("QQ11")]}/${vB[A("QQ11")]} QQ12 ${vA[A("QQ12")]}/${vB[A("QQ12")]} DELTA ${vA[A("DELTA")]}/${vB[A("DELTA")]} ALTIT ${vA[A("ALTIT")]}/${vB[A("ALTIT")]} MJ ${vA[A("MJ")]}/${vB[A("MJ")]} QQ22 ${vA[A("QQ22")]}/${vB[A("QQ22")]} ENERGY ${vA[A("ENERGY")]}/${vB[A("ENERGY")]}`);
+    if (process.env.RUPTS && f % 3000 === 2999) { console.log(`  jsbeeb RUPT entries in the last 3,000 frames: ${rupts - ruptLast} (every field twice: ${(2 * 3000 * 40000 / 39936).toFixed(0)})`); ruptLast = rupts; }
     if (f % 3000 === 2999) { console.log(`frame ${f + 1}: state the same in ${same}; journals ${jA.length}/${jB.length} lines; main loop iterations core.wasm ${itA}, jsbeeb ${itB}`); itA = itB = 0; }
 }
 if (cmpTo) console.log(`CMP ${cmpFrom}-${cmpTo}: ${cmp.frames} frames in a space view with the same game state on both: screen buffer &1000 the same in ${cmp.bufA}, &4000 in ${cmp.bufB}, the dashboard in ${cmp.dash}; pictures compared in ${cmp.pics}, the same in ${cmp.picsSame}, under 1% different in ${cmp.picsNear}${cmp.worst ? `, at worst ${cmp.worst} canvas pixels differ` : ""}; the page's machine's picture shifted by (canvas pixels: count) ${JSON.stringify(cmp.offsets)}`);

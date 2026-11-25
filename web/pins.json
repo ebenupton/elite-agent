@@ -1,0 +1,80 @@
+{
+  "_": "The page's pins, its one place for them (web/README.md, 'Re-pinning'): each game's repository, commit and disc (and the Electron's DFS), and the ROMs, all fetched by the browser from these public commits. A game's journal is its 10-game-minute journal's sha256 by mode (BITKICK, skew 13, from Jameson) as core.wasm flies it in Node, which the page checks a visitor's machine against, and disc its disc's sha256: both written by tests/games.sh --update.",
+  "games": {
+    "tube": {
+      "repo": "ebenupton/solid-elite-6502-second-processor",
+      "commit": "0ee4bb5b7a00fd1a0cf5f69561f7b4b48ced95a8",
+      "disc": "solid-elite-tube.ssd",
+      "sha256": "60db12a4b43ba7614fe5f005531627d4e43a5e00e175760fa8b0315d116c6893",
+      "journal": {
+        "curious": "3aba71ee54a5394f9a3daec6934b8ecdb6cf14a4aaa0e26d9c7b99cbb3bfcf4c",
+        "fair": "9b4a80d2a39a24e0c4217383cf04854e614815480678bf8962a678d37c83be32"
+      }
+    },
+    "electron": {
+      "repo": "ebenupton/solid-elite-acorn-electron",
+      "commit": "1a97c8d1a51141192b55c49be306da1c46e7fb54",
+      "disc": "solid-elite-acorn-electron.ssd",
+      "dfs": "roms/DFS-1770-2.20.rom",
+      "sha256": "f7a764b8be8ee3590be4dbf9700b96813d0283fd7081f44ae4cf14aaa31cce5b",
+      "journal": {
+        "curious": "709b5cc17dd370953c281680f77036a15bdcc39e2565b6a04b56211793672677",
+        "fair": "59176589caedb0fc992258dc71261650eb2eac02e3aefafd3f71abd9979e44db"
+      }
+    },
+    "modelb": {
+      "repo": "ebenupton/solid-elite-bbc-micro",
+      "commit": "4d265a0260dedcd33b377b54334cfc4102333517",
+      "disc": "solid-elite-bbc-micro.ssd",
+      "sha256": "b737848988e8401971f3d1d2d55f58eee3a579e0ee7c1008c97aefe9b0f913da",
+      "journal": {
+        "curious": "1a37259a7b64d3efd0aeece846359108eed30da3d7afec3de53cbe51d16a1814",
+        "fair": "4ac4c5be8ba421442dea13b074e565b17a21c5424802c1d9f947cfdbb0c4f936"
+      }
+    },
+    "flicker": {
+      "repo": "markmoxon/elite-source-code-bbc-master",
+      "commit": "e6581b586b1c984142a0fee0c8009c7466a38d52",
+      "disc": "5-compiled-game-discs/elite-master-flicker-free-sng47.ssd",
+      "sha256": "3c7b7e557d5bce5e7b28f9aed728a79c4b6745b987fdd3d0625cdb64092e9cc9",
+      "journal": {
+        "curious": "1feb435666b727f693ea1ab6629f1cbf60ec7ebe3893b125e9e14814d04bf560",
+        "fair": "af1bfe517346f1266c2f84469cac0425c81cc2756b9617601126b9d215d7ac56"
+      }
+    },
+    "solid": {
+      "repo": "ebenupton/solid-elite-bbc-master",
+      "commit": "1da34f8d624480ca9f5e572c2a7063b5eab717bb",
+      "disc": "5-compiled-game-discs/elite-master-sng47.ssd",
+      "sha256": "a264de8d203ea8f31f9e55b0b3c34efdc53a4e28413b768ddee5daba4e6dc053",
+      "journal": {
+        "curious": "f755d8535224adda35184e2e7a5b1851aa7a7299f553e628167b8bdfd428169c",
+        "fair": "4a1cb0822af416e35ba6f028964e23f31300f3a7ea377c048d8e606b6e0bead1"
+      }
+    }
+  },
+  "roms": {
+    "master": [
+      "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20/mos.rom",
+      "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20/dfs.rom",
+      "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20/viewsht.rom",
+      "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20/edit.rom",
+      "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20/basic4.rom",
+      "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20/adfs.rom",
+      "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20/view.rom",
+      "https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20/terminal.rom"
+    ],
+    "tube": [
+      "https://raw.githubusercontent.com/mattgodbolt/jsbeeb/4a83d430a15035570d17c36ccd1403c4499aabcb/public/roms/tube/6502Tube.rom"
+    ],
+    "electron": [
+      "https://raw.githubusercontent.com/hoglet67/ElectronFpga/db0971434123bd77c71af6ca0575c36b63510b39/roms/os100.rom",
+      "https://raw.githubusercontent.com/hoglet67/ElectronFpga/db0971434123bd77c71af6ca0575c36b63510b39/roms/Basic2.rom"
+    ],
+    "modelb": [
+      "https://raw.githubusercontent.com/mattgodbolt/jsbeeb/4a83d430a15035570d17c36ccd1403c4499aabcb/public/roms/os.rom",
+      "https://raw.githubusercontent.com/mattgodbolt/jsbeeb/4a83d430a15035570d17c36ccd1403c4499aabcb/public/roms/BASIC.ROM",
+      "https://raw.githubusercontent.com/mattgodbolt/jsbeeb/4a83d430a15035570d17c36ccd1403c4499aabcb/public/roms/b1770/dfs1770.rom"
+    ]
+  }
+}

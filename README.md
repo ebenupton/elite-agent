@@ -25,8 +25,10 @@ were written and measured: [wsp/README.md](wsp/README.md).
 **[The live page](https://8bitkick.cc/elite-agent/)**: the same C player, compiled to WebAssembly, flies Fair mode
 on Kieran Connell's BBC Master core, the emulator on the Presto, with the agent and the emulator together in one WebAssembly file,
 from Jameson to Elite, beside the film's panel with both networks' units lit as they decide. 1×, 2×, 4×, flat out, or ACTION for real
-time in fights and the docking's final; `?game=solid` plays Eben Upton's Solid Elite. Elite itself is fetched by the browser from its
-authors' GitHub repositories ([web/README.md](web/README.md)). Both games are flown to Elite on the page's own file: flicker-free in
+time in fights and the docking's final. This fork's page has five games (`?game=`): Eben Upton's Solid Elite on the Master with
+a 6502 Second Processor (the default), on the Acorn Electron, on the BBC Micro (a Model B) and on the Master, and Mark
+Moxon's flicker-free Master Elite. Elite itself is fetched by the browser from its authors' GitHub repositories, at the commits in
+[web/pins.json](web/pins.json) ([web/README.md](web/README.md)). Both games are flown to Elite on the page's own file: flicker-free in
 16.45 game hours, Solid in 18.34, with a whole career in a browser matching one in Node byte for byte. It's built to be the same career
 for every visitor, though so far that's been tested on one Raspberry Pi 5. [web/STARTS.md](web/STARTS.md) has the results, and
 how to fly a career and log it.
@@ -138,8 +140,9 @@ The player finds which is loaded from signatures in RAM and reads each one's add
 table (`cplayer/elite_ver.c`). Solid Elite's renderer borrows some of zero page while it draws (energy
 and the shields among it) and zeroes the view byte while it draws the mission briefing's ship; the player
 reads both as the game has them; it pages its cold code into bank 7 mid-frame, borrowing more of zero page,
-which the player holds over too. It plays Solid Elite as it now is (its three-pass build, 262bfa6); run it
-with `DISC=` its disc (`5-compiled-game-discs/elite-master-sng47.ssd` in its repository). An Optimal career
+which the player holds over too. Its addresses, and those of its Second Processor version, are generated from their builds
+(`web/tools/gen-solid.mjs`), at the commits in `web/pins.json`; run it with `DISC=` its disc
+(`5-compiled-game-discs/elite-master-sng47.ssd` in its repository). An Optimal career
 (seed 13, on an earlier build) reached Elite in 26.6 game hours, against 23.5 on SNG47, mostly lost to reloads where the player
 misses Solid Elite's docked screens.
 
@@ -147,7 +150,8 @@ Solid Elite for the Acorn Electron (an Electron with a Plus 3 and 64K of sideway
 an Acorn Electron built into the page's core (`?game=electron`, [web/electron/README.md](web/electron/README.md)). It is the
 disc version to the player, keys only, with its addresses generated from the port's build (`web/electron/gen-ev.mjs`):
 the port keeps moving its state into sideways RAM, and the machine copies whatever the table puts in a bank into the view
-the player reads.
+the player reads. Solid Elite for the BBC Micro, the Electron port's parent, runs the same way on a BBC Model B built from the
+Master core (`?game=modelb`, [web/modelb/README.md](web/modelb/README.md)), checked against jsbeeb, the game's own emulator.
 
 ## The player (`cplayer/`)
 

@@ -13,12 +13,10 @@ const sha = (f) => createHash("sha256").update(readFileSync(f)).digest("hex");
 const git = (dir, args) => { try { return execSync(`git ${args}`, { cwd: dir, stdio: ["ignore", "pipe", "ignore"] }).toString().trim(); } catch { return null; } };
 const here = new URL(".", import.meta.url).pathname;
 
-const DISCS = {
-    flicker: { name: "Flicker-free Elite (SNG47)", repo: "markmoxon/elite-source-code-bbc-master", commit: "e6581b586b1c984142a0fee0c8009c7466a38d52",
-        path: "5-compiled-game-discs/elite-master-flicker-free-sng47.ssd", sha256: "3c7b7e557d5bce5e7b28f9aed728a79c4b6745b987fdd3d0625cdb64092e9cc9" },
-    solid: { name: "Solid Elite", repo: "ebenupton/solid-elite-bbc-master", commit: "262bfa61b69c3fb75ce2c004d4944bdc47c1abbd",
-        path: "5-compiled-game-discs/elite-master-sng47.ssd", sha256: "0896826fa811c38a0ee1f60a0c9e3eeb1f99c0bd122545a7e9455d09e7c4833e" },
-};
+// (the discs at the page's pins: web/pins.json, its sha256 written there by tests/games.mjs)
+const PINS = JSON.parse(readFileSync(`${here}../pins.json`, "utf8")).games;
+const NAMES = { flicker: "Flicker-free Elite (SNG47)", solid: "Solid Elite" };
+const DISCS = Object.fromEntries(Object.entries(NAMES).map(([k, name]) => [k, { name, repo: PINS[k].repo, commit: PINS[k].commit, path: PINS[k].disc, sha256: PINS[k].sha256 }]));
 const disc = DISCS[o.game];
 if (!disc) { console.error(`unknown game ${o.game}`); process.exit(2); }
 const discSha = sha(o.disc);

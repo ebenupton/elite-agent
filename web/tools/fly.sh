@@ -15,11 +15,9 @@ while [ $# -gt 0 ]; do
     esac
 done
 if [ -z "$GAME" ] || [ -z "$SKEW" ]; then echo "usage: fly.sh --game flicker|solid --skew N [--out dir]" >&2; exit 2; fi
-case "$GAME" in
-    flicker) DISC_URL=https://raw.githubusercontent.com/markmoxon/elite-source-code-bbc-master/e6581b586b1c984142a0fee0c8009c7466a38d52/5-compiled-game-discs/elite-master-flicker-free-sng47.ssd ;;
-    solid) DISC_URL=https://raw.githubusercontent.com/ebenupton/solid-elite-bbc-master/262bfa61b69c3fb75ce2c004d4944bdc47c1abbd/5-compiled-game-discs/elite-master-sng47.ssd ;;
-    *) echo "unknown game $GAME" >&2; exit 2 ;;
-esac
+case "$GAME" in flicker|solid) ;; *) echo "unknown game $GAME" >&2; exit 2 ;; esac
+# (the disc at the page's pin: web/pins.json)
+DISC_URL=$(node -e 'const p = require(process.argv[1]).games[process.argv[2]]; console.log(`https://raw.githubusercontent.com/${p.repo}/${p.commit}/${p.disc}`)' "$WEB/pins.json" "$GAME")
 ROM_BASE=https://raw.githubusercontent.com/scarybeasts/beebjit/db16aaf09df1fa0fd7ea686bc8d09b13f5674a42/roms/mos3.20
 MINUTES=${MINUTES:-2400}
 mkdir -p "$OUT/assets/roms"; OUT=$(cd "$OUT" && pwd)

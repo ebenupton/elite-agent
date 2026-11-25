@@ -76,15 +76,15 @@ small differences add up, and the careers part.
 
 The Electron's ROMs are Acorn's and ACP's, and not in this repository. The page fetches MOS 1.00 and BASIC II from
 hoglet67's [ElectronFpga](https://github.com/hoglet67/ElectronFpga) at a pinned commit (the same images as clkh's), and
-the ACP 1770 DFS from the game's repository (`roms/DFS-1770-2.20.rom`; `ELK_DFS` in `src/main.js`). `?elkdfs=<url>` gives
+the ACP 1770 DFS from the game's repository (`roms/DFS-1770-2.20.rom`, at the game's pin in `../pins.json`). `?elkdfs=<url>` gives
 another, and if the fetch fails the page asks the visitor for their copy (16 KB) once and keeps it in the browser. For
 the native and headless runs, `scripts/fetch-electron-roms.sh` fetches the first two and takes the DFS from `ELK_DFS=`
 or `ELK_PLUS3_ZIP=`.
 
 ## The game's disc
 
-The page fetches `solid-elite-acorn-electron.ssd` from the root of the game's repository (its `main` until a commit is
-pinned). Until that repository is public, `?disc=<url>` points it at a local copy.
+The page fetches `solid-elite-acorn-electron.ssd` from the root of the game's repository at the commit in
+[../pins.json](../pins.json) (`?disc=<url>` points it at another copy); re-pinning is in [../README.md](../README.md).
 
 ## Running
 
@@ -93,7 +93,7 @@ pinned). Until that repository is public, `?disc=<url>` points it at a local cop
     WASI_SDK=/path/to/wasi-sdk web/tube/build.sh         # web/core.wasm, with the Electron in it
     ELK=1 ROMS=rp2350-bbc-micro/roms/electron DISC=solid-elite-acorn-electron.ssd MODE=curious NAME=BITKICK node web/run_core.mjs 20
     web/electron/build/native_run rp2350-bbc-micro/roms/electron solid-elite-acorn-electron.ssd 30000
-    tests/electron.sh                                    # a pinned 10-minute career, in Node and natively
+    GAMES=electron node tests/games.mjs                  # pinned 10-minute careers, in Node
 
 `native_run` takes `SHOT=n` (PPM screenshots), `PEEK=n`, `KEYS=1`, `DUMP=frame:addr:len`, `TRACEPC=hex`, `KEYLOG=file`
 (for replay.mjs) and `LOG=2`.

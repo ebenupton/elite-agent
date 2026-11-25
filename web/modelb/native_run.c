@@ -38,7 +38,9 @@ int main(int argc, char **argv) {
     int frames = atoi(argv[3]), shot = getenv("SHOT") ? atoi(getenv("SHOT")) : 0;
     clock_t t0 = clock();
     for (int f = 1; f <= frames; f++) {
-        core_frame(shot && f % shot == 0);
+        int from = getenv("SHOTFROM") ? atoi(getenv("SHOTFROM")) : 0;
+        if (getenv("CHECKFROM") && f >= atoi(getenv("CHECKFROM"))) { printf("frame %d\n", f); core_frame(1); continue; }
+        core_frame(shot && f % shot == 0 && f >= from);
         if (shot && f % shot == 0) {
             char p[64]; snprintf(p, sizeof p, "mb%07d.ppm", f);
             FILE *o = fopen(p, "wb"); int W = core_width(), H = core_height(); fprintf(o, "P6 %d %d 255\n", W, H);
