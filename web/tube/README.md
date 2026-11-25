@@ -23,7 +23,7 @@ The page's defaults are `?game=tube&mode=curious`; the Wireframe and Solid (Mast
     F_FRAME's code at start-up), the player sees the game's copy.
   - The Tube version reads the joystick from JOPOS in the parasite. Its host now forwards the stick itself (0ee4bb5's
     `tube/src/h-joy.asm`); as before, and as Solid Elite's own agent harness does, the agent's stick also goes straight into
-    the parasite's JOPOS (generated: &0AA7 at 0ee4bb5), which is harmless.
+    the parasite's JOPOS (generated: &0AA7 at 77a37b3), which is harmless.
   - `core_start` waits for the whole of the parasite's code and the first title screen, which come later over the Tube.
 - **The player** ([../../cplayer/elite_ver.c](../../cplayer/elite_ver.c)): `EV_TUBE`, its addresses, signatures and the
   frame layer's hooks generated from the parasite's symbols (`tube/build/psyms.txt`) by [../tools/gen-solid.mjs](../tools/gen-solid.mjs)

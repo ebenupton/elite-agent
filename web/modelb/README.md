@@ -46,17 +46,24 @@ without the ADFS: the same three ROMs as this machine, sideways RAM in slots 0-7
   (`&1000`, `&4000`) are byte for byte the same in 359 and 380 of them; above them only the rupture's own calibration, seven
   bytes, differs. The pictures, the page's renderer against jsbeeb's video, are the same within 1% of their pixels in 103 of
   the 134 frames compared (the rest mid-flip); this machine's picture mostly sits one scan line lower than jsbeeb's.
-- **A difference: the rupture's race with the ADC.** On this machine the split screen breaks for stretches of a few hundred
-  frames (two to three in a 10-minute career: the space view shown in halves, the dashboard in the space view's colours, and
-  in Fair mode, which reads the screen, phantom fights); on jsbeeb it never does (every field's two rupture interrupts, over
-  18,000 frames). The cause is in the game, and the two machines' timing decides whether it shows: the loader has the MOS
-  sample three ADC channels at 8 bits, so the MOS starts a 4 ms conversion at each 100 Hz tick and chains two more, and the
-  third ends about 24,500 cycles after the tick, just before the next rupture interrupt when the period is the 192-line one.
-  `IRQG` takes the end of conversion, finds timer 1 not yet fired and passes the interrupt to the MOS; if timer 1 fires in
-  the 70 or so cycles before the MOS reads the flags, the MOS services it as its clock tick and clears it, `RUPT` never runs,
-  frame B never gets its registers and the 6845 loses its vertical sync for four fields. Here the third end of conversion
-  lands about 84 cycles before the interrupt, inside that window; with the ADC's interrupts held off the picture never breaks.
-  On jsbeeb it lands just outside. A real Model B could be either.      web/modelb/build.sh                                          # build/mbh, build/native_run
+- **A difference: the rupture's race with the ADC** (up to 4d265a0; fixed in the game since, below). On this machine the
+  split screen broke for stretches of a few hundred frames (two to three in a 10-minute career: the space view shown in
+  halves, the dashboard in the space view's colours, and in Fair mode, which reads the screen, phantom fights); on
+  jsbeeb it never does (every field's two rupture interrupts, over 18,000 frames). The cause is in the game, and the two
+  machines' timing decides whether it shows: the loader has the MOS sample three ADC channels at 8 bits, so the MOS
+  starts a 4 ms conversion at each 100 Hz tick and chains two more, and the third ends about 24,500 cycles after the
+  tick, just before the next rupture interrupt when the period is the 192-line one. `IRQG` takes the end of conversion,
+  finds timer 1 not yet fired and passes the interrupt to the MOS; if timer 1 fires in the 70 or so cycles before the
+  MOS reads the flags, the MOS services it as its clock tick and clears it, `RUPT` never runs, frame B never gets its
+  registers and the 6845 loses its vertical sync for four fields. Here the third end of conversion lands about 84 cycles
+  before the interrupt, inside that window; with the ADC's interrupts held off the picture never breaks. On jsbeeb it
+  lands just outside. A real Model B could be either.
+- **The fix landed** in the game: Solid Elite for the BBC Micro's 89ec7d3 ("Interrupts: the MOS never sees the rupture's
+  timer when IRQG passes it another"), in b4b51aa, the commit the page now flies. `IRQG` passes such an interrupt on with
+  timer 1 hidden in the MOS's mask for the system VIA (`&0279`), so a timer 1 that fires meanwhile stays pending and is
+  taken as the rupture's when the MOS returns. The player carried no workaround for the race, so nothing was dropped here.
+
+      web/modelb/build.sh                                          # build/mbh, build/native_run
       node web/modelb/compare.mjs --noboot --every 500 E581 3000   # the MOS to BASIC's prompt, on both
       CMP=2200:7000 node web/modelb/jsagent.mjs solid-elite-bbc-micro.ssd 30000 curious 13
 
@@ -65,7 +72,7 @@ without the ADFS: the same three ROMs as this machine, sideways RAM in slots 0-7
 - **Its view and addresses**, as the Electron's ([../electron/README.md](../electron/README.md)): main RAM, with windows of
   sideways RAM at `&3000` up for any variable the port keeps in a bank, read from the bank's slot as the loader recorded it
   (`BANK4`..`BANK7`). [../electron/gen-ev.mjs](../electron/gen-ev.mjs) writes the table from the build's symbols into
-  [../../cplayer/elite_ver_mb.h](../../cplayer/elite_ver_mb.h); at 4d265a0 every address the player reads is in main RAM,
+  [../../cplayer/elite_ver_mb.h](../../cplayer/elite_ver_mb.h); at b4b51aa every address the player reads is in main RAM,
   and the windows hold only each program's `TT100`, by which the player recognises the game.
 - **Its keys** are the BBC Micro's own, straight onto the matrix; disc Elite is a keyboard game, so the player flies on keys.
 - **The game is disc Elite** to the player (`ev_disc()`): its commander file is the disc version's, kept apart from the

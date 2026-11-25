@@ -3,33 +3,33 @@
   "games": {
     "tube": {
       "repo": "ebenupton/solid-elite-6502-second-processor",
-      "commit": "0ee4bb5b7a00fd1a0cf5f69561f7b4b48ced95a8",
+      "commit": "77a37b3bd6b042674c10b50b173312bdcd737ce7",
       "disc": "solid-elite-tube.ssd",
-      "sha256": "60db12a4b43ba7614fe5f005531627d4e43a5e00e175760fa8b0315d116c6893",
+      "sha256": "9a851110dd0103ad70bd74f6db50bb2c7da5addc37a05238e9b9bd5209f49337",
       "journal": {
-        "curious": "3aba71ee54a5394f9a3daec6934b8ecdb6cf14a4aaa0e26d9c7b99cbb3bfcf4c",
-        "fair": "9b4a80d2a39a24e0c4217383cf04854e614815480678bf8962a678d37c83be32"
+        "curious": "215c393fe714ee2e075bf48f01f5cf9b94dfdb5cffa2b0f7215625b36d28762a",
+        "fair": "969401a0e3907cbf588a7b5eae0961a3e111ab4fb421189646b47d0c5d063dde"
       }
     },
     "electron": {
       "repo": "ebenupton/solid-elite-acorn-electron",
-      "commit": "1a97c8d1a51141192b55c49be306da1c46e7fb54",
+      "commit": "a08fc74fc4c6fc35e4f602f2d559bc2b11df9fee",
       "disc": "solid-elite-acorn-electron.ssd",
       "dfs": "roms/DFS-1770-2.20.rom",
-      "sha256": "f7a764b8be8ee3590be4dbf9700b96813d0283fd7081f44ae4cf14aaa31cce5b",
+      "sha256": "d3dc74a98b49e7d980d0bb9c93494bcaabffbe9d26ebe7907203337ba788e621",
       "journal": {
-        "curious": "709b5cc17dd370953c281680f77036a15bdcc39e2565b6a04b56211793672677",
-        "fair": "59176589caedb0fc992258dc71261650eb2eac02e3aefafd3f71abd9979e44db"
+        "curious": "2ec5c6458d89f16c70601eefe91d9bd9ec8125f08d3e9638da6dc29cfa9f5c7d",
+        "fair": "eeb22af9aa25113a7cf5ac99e83086bf98a4963bfc79b164728cd6c11b057386"
       }
     },
     "modelb": {
       "repo": "ebenupton/solid-elite-bbc-micro",
-      "commit": "4d265a0260dedcd33b377b54334cfc4102333517",
+      "commit": "b4b51aa99f32496438b234680503752b9fa8fff9",
       "disc": "solid-elite-bbc-micro.ssd",
-      "sha256": "b737848988e8401971f3d1d2d55f58eee3a579e0ee7c1008c97aefe9b0f913da",
+      "sha256": "a2e42e698e69b1153271fba9f2d39a5d9d9d08e3e37e715e6bb6c5d62a000946",
       "journal": {
-        "curious": "1a37259a7b64d3efd0aeece846359108eed30da3d7afec3de53cbe51d16a1814",
-        "fair": "4ac4c5be8ba421442dea13b074e565b17a21c5424802c1d9f947cfdbb0c4f936"
+        "curious": "533d5cc2989cf32c30d74d2c2558619dfff149de49ada63e28e668a18c16323d",
+        "fair": "9c2064314cfadefeba64995fa6cc59a6a671e45c78806e70105d7a12b085de0b"
       }
     },
     "flicker": {
@@ -44,12 +44,12 @@
     },
     "solid": {
       "repo": "ebenupton/solid-elite-bbc-master",
-      "commit": "1da34f8d624480ca9f5e572c2a7063b5eab717bb",
+      "commit": "ac16ec3959d69cefad65855798d37333f41dc5a8",
       "disc": "5-compiled-game-discs/elite-master-sng47.ssd",
-      "sha256": "a264de8d203ea8f31f9e55b0b3c34efdc53a4e28413b768ddee5daba4e6dc053",
+      "sha256": "6f0f076d5d4d7c3c69a435b485aa6b5347d6b5b9637e02ea2126d8b8cffbe5ef",
       "journal": {
-        "curious": "f755d8535224adda35184e2e7a5b1851aa7a7299f553e628167b8bdfd428169c",
-        "fair": "4a1cb0822af416e35ba6f028964e23f31300f3a7ea377c048d8e606b6e0bead1"
+        "curious": "6126e812da8ba073b21f6e12ef9de138cf75c934be65f93d4f61429bff51081c",
+        "fair": "0b26a3a3214c5980cd2efff2f111b813802c49247e632277294799d928950980"
       }
     }
   },
