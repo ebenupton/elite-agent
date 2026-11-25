@@ -9,5 +9,5 @@ What the host needs: nothing special.
   Content-Security-Policy connect-src).
 - index.html, app.js and style.css carry a version in their links (?v=...), so a new upload is picked up at once.
 
-Games: ?game=tube (the default), ?game=electron, ?game=modelb, ?game=flicker, ?game=solid; ?mode=curious|fair|optimal.
+Games: ?game=tube (the default), ?game=electron, ?game=modelb, ?game=solid; ?mode=curious|fair|optimal.
 Licences: LICENSES.txt.
