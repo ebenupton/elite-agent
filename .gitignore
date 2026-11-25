@@ -60,3 +60,4 @@ web/node_modules/
 web/core.dev.wasm
 web/tube/build/
 web/electron/build/
+web/modelb/build/

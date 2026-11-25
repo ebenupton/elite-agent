@@ -8,7 +8,10 @@
     .ni = 37, .save_cmp = 73, .title_type = {11, 19}, .kills_by_type = 0, .joy_fire_key = 0 }
 // the player's view (web/electron/core_elk.c): main RAM, with these windows copied in each frame from sideways RAM: the
 // view address, the bank's address (&8000-&BFFF), the length, and the main RAM byte that holds the bank's slot
-typedef struct { uint16_t view, src, len, slot_at; } elk_window_t;
+#ifndef EV_WINDOW_T
+#define EV_WINDOW_T
+typedef struct { uint16_t view, src, len, slot_at; } ev_window_t;
+#endif
 #define EV_ELK_WINDOWS { \
     {0x3000, 0x9162, 32, 0x0403},     /* docked TT100 */ \
     {0x3020, 0x92FF, 32, 0x0403},     /* flight TT100 */ \

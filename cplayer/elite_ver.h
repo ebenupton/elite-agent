@@ -8,7 +8,7 @@
 #pragma once
 #include <stdint.h>
 
-enum { EV_NONE = 0, EV_MASTER = 1, EV_BBC_DISC = 2, EV_SOLID = 3, EV_TUBE = 4, EV_ELK = 5 };
+enum { EV_NONE = 0, EV_MASTER = 1, EV_BBC_DISC = 2, EV_SOLID = 3, EV_TUBE = 4, EV_ELK = 5, EV_MB = 6 };
 // the machine, as the platform says (machine_hook.h's enum machine_model; 0: not said)
 enum { EV_MODEL_UNKNOWN = 0, EV_MODEL_BBC_B = 1, EV_MODEL_BBC_B_PLUS = 2, EV_MODEL_MASTER_128 = 3,
        EV_MODEL_ELECTRON = 4 };     // (the Electron: web/electron's machine, not machine_hook.h's)
@@ -51,7 +51,7 @@ static inline int ev_master(void) { return g_ev.id == EV_MASTER || g_ev.id == EV
 // (Solid Elite, on the Master or on its 6502 Second Processor: the same docked screens and frame layer)
 static inline int ev_solid(void) { return g_ev.id == EV_SOLID || g_ev.id == EV_TUBE; }
 // (the BBC Micro's disc version, or Solid Elite for the Electron, which is it ported: the same game, keys only)
-static inline int ev_disc(void) { return g_ev.id == EV_BBC_DISC || g_ev.id == EV_ELK; }
+static inline int ev_disc(void) { return g_ev.id == EV_BBC_DISC || g_ev.id == EV_ELK || g_ev.id == EV_MB; }
 static inline int ev_elk(void) { return g_ev.id == EV_ELK; }
 // a wait that a disc load can be part of (the disc version loads its flight code at a launch, its docked
 // code at a dock or a death, a ship file at a hyperspace arrival: ~5 s each from the 8271)

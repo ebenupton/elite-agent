@@ -99,6 +99,12 @@ static const elite_ver_t DISC = {
 #include "elite_ver_elk.h"
 static const elite_ver_t ELK = EV_ELK_INIT;
 
+// Solid Elite for the BBC Micro (github.com/ebenupton/solid-elite-bbc-micro): BBC Micro disc Elite on a Model B with
+// 64K of sideways RAM, the Electron port's parent, laid out the same way; its table generated the same way
+// (web/electron/gen-ev.mjs), its view made by web/modelb/modelb.c.
+#include "elite_ver_mb.h"
+static const elite_ver_t MB = EV_MB_INIT;
+
 // Recognising them: FNV-1a hashes of 256-byte stretches of code (and the disc version's text tokens)
 // that nothing writes to, from Moxon's assembled binaries, checked on the machines
 static uint32_t fnv(const uint8_t *p, int n)
@@ -138,6 +144,12 @@ static int is_elk(const uint8_t *ram)
     return fnv(ram + EV_ELK_SIG_D_AT, 32) == EV_ELK_SIG_D || fnv(ram + EV_ELK_SIG_F_AT, 32) == EV_ELK_SIG_F;
 }
 
+static int is_mb(const uint8_t *ram)
+{
+    // (as the Electron's: either program's TT100 in its home bank, in the view)
+    return fnv(ram + EV_MB_SIG_D_AT, 32) == EV_MB_SIG_D || fnv(ram + EV_MB_SIG_F_AT, 32) == EV_MB_SIG_F;
+}
+
 int elite_detect(int model, const uint8_t *ram)
 {
     if (g_ev.id != EV_NONE) return g_ev.id;
@@ -145,6 +157,7 @@ int elite_detect(int model, const uint8_t *ram)
     if ((model == EV_MODEL_MASTER_128 || model == EV_MODEL_UNKNOWN) && is_master(ram)) g_ev = MASTER;
     else if ((model == EV_MODEL_MASTER_128 || model == EV_MODEL_UNKNOWN) && is_solid(ram)) g_ev = SOLID;
     else if ((model == EV_MODEL_MASTER_128 || model == EV_MODEL_UNKNOWN) && is_tube(ram)) g_ev = TUBE;
+    else if (model == EV_MODEL_BBC_B && is_mb(ram)) g_ev = MB;
     else if ((model == EV_MODEL_BBC_B || model == EV_MODEL_UNKNOWN) && is_disc(ram)) g_ev = DISC;
     else if (model == EV_MODEL_ELECTRON && is_elk(ram)) g_ev = ELK;
     return g_ev.id;

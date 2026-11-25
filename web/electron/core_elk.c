@@ -15,13 +15,13 @@ static int16_t s_audio[625];
 
 // ---- the player's view: main RAM, and the windows of sideways RAM the address table names (gen-ev.mjs), each from
 // its bank's slot as the loader recorded it, whatever is paged
-static const elk_window_t WINDOWS[] = EV_ELK_WINDOWS;
+static const ev_window_t WINDOWS[] = EV_ELK_WINDOWS;
 static void view(uint8_t *ram)
 {
     memcpy(ram, E->ram, 0x8000);
     memset(ram + 0x3000, 0, 0x5000);
     for (size_t i = 0; i < sizeof WINDOWS / sizeof WINDOWS[0]; i++) {
-        const elk_window_t *w = &WINDOWS[i];
+        const ev_window_t *w = &WINDOWS[i];
         const uint8_t *img = E->slot[E->ram[w->slot_at] & 15];
         if (img && w->src >= 0x8000 && w->src + w->len <= 0xc000) memcpy(ram + w->view, img + (w->src - 0x8000), w->len);
     }
