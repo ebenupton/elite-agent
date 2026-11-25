@@ -33,9 +33,9 @@ const GAMES = {
     // (Solid Elite for the BBC Micro: a Model B with a 1770 DFS and sideways RAM, web/modelb/; keys only)
     modelb: { name: "Model B", short: "B", modelb: true,
         credit: "Solid Elite for the BBC Micro by Eben Upton, after Mark Moxon's source and Ian Bell and David Braben", skew: 13 },
-    flicker: { name: "Wireframe", short: "Wire",
+    flicker: { name: "Original (wireframe)", short: "Orig",
         credit: "Flicker-free Elite by Mark Moxon, after Ian Bell and David Braben", skew: 13 },
-    solid: { name: "Solid",
+    solid: { name: "Master",
         credit: "Solid Elite by Eben Upton, after Mark Moxon's source and Ian Bell and David Braben", skew: 13 },
 };
 for (const [k, g] of Object.entries(GAMES)) g.disc = RAW(PINS.games[k], PINS.games[k].disc);

@@ -11,8 +11,8 @@
   `scripts/fetch-emulator.sh`). A new pin means flying the careers in [STARTS.md](STARTS.md) again.
 - **Five games**, the `.games` selector or `?game=`: `tube` (the default: Solid Elite on a Master with a 6502 Second
   Processor, [tube/README.md](tube/README.md)), `electron` (Solid Elite for the Acorn Electron, [electron/README.md](electron/README.md)),
-  `modelb` (Solid Elite for the BBC Micro, on a Model B, [modelb/README.md](modelb/README.md)), `flicker` ("Wireframe", Mark
-  Moxon's flicker-free Master Elite) and `solid` (Solid Elite on the Master).
+  `modelb` (Solid Elite for the BBC Micro, on a Model B, [modelb/README.md](modelb/README.md)), `flicker` ("Original (wireframe)", Mark
+  Moxon's flicker-free Master Elite) and `solid` ("Master": Solid Elite on the Master).
 - **Elite and the ROMs** are fetched by the browser at the commits in [pins.json](pins.json), the one place for them: each
   game's disc from its repository (and the Electron's DFS from its game's), the Master's MOS 3.20 ROMs from beebjit's
   repository, the Second Processor's and the Model B's ROMs from jsbeeb's, the Electron's MOS and BASIC from ElectronFpga.
