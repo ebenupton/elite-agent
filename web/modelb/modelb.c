@@ -147,12 +147,24 @@ static void hsync_check(const struct vstream *vs)
     }
 }
 #endif
+// (a picture starts mid-line: until the raster's next horizontal sync the stream's ticks are dropped, and its events
+// other than skips are taken, so the rest of that line keeps what the last picture drew there. Given the ticks, the
+// renderer, its beam past the line's end, forced a horizontal sync at the first: that line's rest came out a row lower
+// and shifted left, a notch in the border and a smear, and every row down to the vertical sync a row lower, the seam
+// moving half a line a frame, as 40,000 cycles are 32 µs more than the field)
+static int s_wait_hsync;
 static void consume(void)
 {
     struct vstream *vs = &s_stream;
 #ifdef MB_HSYNC_CHECK
     hsync_check(vs);
 #endif
+    while (s_wait_hsync && vs_available(vs) > 0) {
+        uint16_t w = vs->ring[vs->tail++ & (VS_RING - 1)];
+        if (!(w & VS_EVENT) || (w & 0xff) == VS_SKIP) continue;
+        if ((w & 0xff) == VS_HSYNC) s_wait_hsync = 0;
+        render_word(&s_render, w);
+    }
     while (vs_available(vs) > 0) {
         uint16_t w = vs->ring[vs->tail & (VS_RING - 1)];
         if (!(w & VS_EVENT)) {
@@ -172,13 +184,15 @@ void mb_shot(uint8_t *out, uint64_t cycles)
         render_init(&s_render, s_canvas);
     }
     memset(&s_stream, 0, sizeof s_stream);
-    // (the renderer's beam where the raster is: the lines since the last vertical sync, nothing drawn until the next
-    // horizontal sync, less the row the renderer starts an odd field on, as it did last time (s_vofs). Its own count would be stale after frames without a stream, and the game's field is two CRTC
-    // frames, the first without a vertical sync, so the renderer would place up to a field wrongly)
+    // (the renderer's beam where the raster is: the lines since the last vertical sync, less the row the renderer starts
+    // an odd field on, as it did last time (s_vofs), and nothing drawn until the next horizontal sync (s_wait_hsync). Its
+    // own count would be stale after frames without a stream, and the game's field is two CRTC frames, the first
+    // without a vertical sync, so the renderer would place up to a field wrongly)
     s_render.vert_beam_pos = (int32_t) (2 * s_hsyncs) + s_vofs;
-    s_render.horiz_beam_pos = 4096;
+    s_render.horiz_beam_pos = 0;
     s_render.render_pos = RENDER_LINE_END;
     s_render.span_start = s_render.span_end = 0;
+    s_wait_hsync = 1;
     for (int i = 0; i < 16; i++) render_word(&s_render, VS_EV(VS_ULAPAL, (i << 4) | M->ula_pal[i]));
     render_word(&s_render, VS_EV(VS_ULACTRL, M->ula_ctrl));
     M->vs = &s_stream;

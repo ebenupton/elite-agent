@@ -25,7 +25,12 @@ leaves the Master's own build as it was. As a Model B the machine has
 The boot is the core's: power on with SHIFT held until cycle 3,000,000, so the disc's `!BOOT` runs. The picture is the
 core's renderer, a frame's video stream at a time; the machine counts the horizontal syncs since the vertical sync, so a
 picture started mid-field puts the renderer's beam where the raster is (the game's field is two 6845 frames, the first with
-no vertical sync, and the renderer's own count is stale after undrawn frames). A key the player presses reschedules the
+no vertical sync, and the renderer's own count is stale after undrawn frames), and draws nothing until the raster's
+next horizontal sync: the rest of the line it starts in keeps the last picture's pixels. (Until the fix, the renderer took
+that line's ticks with its beam past the line's end, so it forced a horizontal sync at once. The rest of the line came out
+a row lower and shifted, a notch in the side border and a smear across the picture, and every row from there down to
+the vertical sync came out a row lower too. A frame is 40,000 cycles, 32 µs more than the field, so the seam moved half a
+line a frame: at 1× it was a line rolling down the screen, 25 lines a second.) A key the player presses reschedules the
 machine, so that the keyboard's interrupt is taken where it falls, whatever is drawn.
 
 ## Checked against jsbeeb
@@ -45,7 +50,8 @@ without the ADFS: the same three ROMs as this machine, sideways RAM in slots 0-7
 - **The screens**: in 395 frames of the space view whose game state is identical on both, the two screen buffers
   (`&1000`, `&4000`) are byte for byte the same in 359 and 380 of them; above them only the rupture's own calibration, seven
   bytes, differs. The pictures, the page's renderer against jsbeeb's video, are the same within 1% of their pixels in 103 of
-  the 134 frames compared (the rest mid-flip); this machine's picture mostly sits one scan line lower than jsbeeb's.
+  the 134 frames compared (the rest mid-flip); this machine's picture mostly sat one scan line lower than jsbeeb's
+  (measured before the renderer's fix above, which had put the rows below its seam a line lower).
 - **A difference: the rupture's race with the ADC** (up to 4d265a0; fixed in the game since, below). On this machine the
   split screen broke for stretches of a few hundred frames (two to three in a 10-minute career: the space view shown in
   halves, the dashboard in the space view's colours, and in Fair mode, which reads the screen, phantom fights); on
