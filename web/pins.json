@@ -13,13 +13,13 @@
     },
     "electron": {
       "repo": "ebenupton/solid-elite-acorn-electron",
-      "commit": "a08fc74fc4c6fc35e4f602f2d559bc2b11df9fee",
+      "commit": "fb5dc2eda5de802f84dec75f80b9fda194914edc",
       "disc": "solid-elite-acorn-electron.ssd",
       "dfs": "roms/DFS-1770-2.20.rom",
-      "sha256": "d3dc74a98b49e7d980d0bb9c93494bcaabffbe9d26ebe7907203337ba788e621",
+      "sha256": "e717fda8c6884ac67d2733bd1c8de65a7e41c2b7b2254c3f0ff5ea9aa67f1c6c",
       "journal": {
-        "curious": "2ec5c6458d89f16c70601eefe91d9bd9ec8125f08d3e9638da6dc29cfa9f5c7d",
-        "fair": "eeb22af9aa25113a7cf5ac99e83086bf98a4963bfc79b164728cd6c11b057386"
+        "curious": "62723c25556ea6e55b7e28b4e6c9c4210d4a80c7292a03ef838613da65e86b25",
+        "fair": "617867959953ca5e69b85592b53b6e780acec4523873aba170f50348dc33b44a"
       }
     },
     "modelb": {
